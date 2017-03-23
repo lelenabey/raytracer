@@ -70,11 +70,11 @@ inline void rayTransform(struct ray3D *ray_orig, struct ray3D *ray_transformed, 
  ///////////////////////////////////////////
  // TO DO: Complete this function
  ///////////////////////////////////////////
-  memcpy(ray_transformed->p0,ray_orig->p0,4*sizeof(double));
-  memcpy(ray_transformed->d,ray_orig->d,16*sizeof(double));
+  ray_transformed->p0 = ray_orig->p0;
+  ray_transformed->d = ray_orig->d;
 
-  matVecMult(obj->T, ray_transformed->p0);
-  matMult(obj->T, ray_transformed->d);
+  matVecMult(obj->T, &ray_transformed->p0);
+  matVecMult(obj->T, &ray_transformed->d);
 
 }
 
@@ -95,10 +95,10 @@ inline void normalTransform(struct point3D *n_orig, struct point3D *n_transforme
   for (j=0;j<4;j++)
      C[i][j]=obj->Tinv[j][i];
 
- memcpy(n_transformed,n_orig,4*sizeof(double));
+ memcpy(n_transformed,n_orig,sizeof(struct point3D));
  normalize(n_transformed);
 
- matVecMult(&C, n_transformed);
+ matVecMult(C, n_transformed);
 }
 
 /////////////////////////////////////////////
@@ -195,6 +195,21 @@ void planeIntersect(struct object3D *plane, struct ray3D *ray, double *lambda, s
  /////////////////////////////////
  // TO DO: Complete this function.
  /////////////////////////////////
+ 
+ struct ray3D * origin = newRay(&(ray->p0), &(ray->d));
+ rayTransform(ray, origin, plane);
+ //Give lambda some value initially. DONT FORGET ABOUT THIS REEEEEEEEEEEEEEEEEVVVIIIIISSSIT!
+ *lambda = -1;
+ if(origin->d.pz == 0){
+  return;
+ }
+ double t = (-1*(origin->p0.pz)) / origin->d.pz;
+ *lambda = t;
+ p = newPoint(t*origin->d.px, t*origin->d.py, t*origin->d.pz);
+ addVectors(&(origin->p0), p);
+ n = newPoint(0,0,1);  
+ normalTransform(newPoint(0,0,1), n, plane); 
+ matVecMult(plane->Tinv, p);
 }
 
 void sphereIntersect(struct object3D *sphere, struct ray3D *ray, double *lambda, struct point3D *p, struct point3D *n, double *a, double *b)

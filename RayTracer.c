@@ -175,7 +175,7 @@ void findFirstHit(struct ray3D *ray, double *lambda, struct object3D *Os, struct
  // TO DO: Implement this function. See the notes for
  // reference of what to do in here
  /////////////////////////////////////////////////////////////
-
+ Os->intersect(obj, ray, lambda, p, n, a, b);
 }
 
 void rayTrace(struct ray3D *ray, int depth, struct colourRGB *col, struct object3D *Os)
@@ -211,6 +211,7 @@ void rayTrace(struct ray3D *ray, int depth, struct colourRGB *col, struct object
  // TO DO: Complete this function. Refer to the notes
  // if you are unsure what to do here.
  ///////////////////////////////////////////////////////
+  
 }
 
 int main(int argc, char *argv[])
@@ -231,7 +232,8 @@ int main(int argc, char *argv[])
 				// the direction or a ray
  struct ray3D *ray;		// Structure to keep the ray from e to a pixel
  struct colourRGB col;		// Return colour for raytraced pixels
- struct colourRGB background;   // Background colour
+
+  struct colourRGB background;   // Background colour
  int i,j;			// Counters for pixel coordinates
  unsigned char *rgbIm;
 
@@ -293,7 +295,7 @@ int main(int argc, char *argv[])
  // Camera center is at (0,0,-1)
  e.px=0;
  e.py=0;
- e.pz=-3;
+ e.pz=-1;
  e.pw=1;
 
  // To define the gaze vector, we choose a point 'pc' in the scene that
@@ -362,7 +364,23 @@ int main(int argc, char *argv[])
     // TO DO - complete the code that should be in this loop to do the
     //         raytracing!
     ///////////////////////////////////////////////////////////////////
+    struct point3D * origin = newPoint(0,0,0);
+    struct point3D * imagePlane = newPoint(0,0,0);
+    imagePlane->px = (-sx/2) + i + 0.5;
+    imagePlane->py = (-sx/2) + j + 0.5;
+    imagePlane->pz = -1;
+    
+    //Ray Direction
+    struct point3D * direction;
+    *direction = *origin;
+    subVectors(imagePlane, direction);
+    
+    //Convert to world-space
+    matVecMult(cam->C2W, direction);
+    matVecMult(cam->C2W, origin);
+    struct ray3D * ray = new Ray3D(origin, direction);
 
+     
   } // end for i
  } // end for j
 
