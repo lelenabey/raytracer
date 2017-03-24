@@ -80,6 +80,7 @@ void buildScene(void)
  insertObject(o,&object_list);			// Insert into object list
 
  // Let's add a couple spheres
+/*
  o=newSphere(.05,.95,.35,.35,1,.25,.25,1,1,6);
  Scale(o,.75,.5,1.5);
  RotateY(o,PI/2);
@@ -93,7 +94,7 @@ void buildScene(void)
  Translate(o,1.75,1.25,5.0);
  invert(&o->T[0][0],&o->Tinv[0][0]);
  insertObject(o,&object_list);
-
+*/
  // Insert a single point light source.
  p.px=0;
  p.py=15.5;
@@ -147,11 +148,14 @@ void rtShade(struct object3D *obj, struct point3D *p, struct point3D *n, struct 
   // for the object. Note that we will use textures also for Photon Mapping.
   obj->textureMap(obj->texImg,a,b,&R,&G,&B);
  }
-
  //////////////////////////////////////////////////////////////
  // TO DO: Implement this function. Refer to the notes for
  // details about the shading model.
  //////////////////////////////////////////////////////////////
+ col->R = obj->col.R*255;
+ col->G = obj->col.G*255;
+ col->B = obj->col.B*255;
+ //fprintf(stderr,"r g b:  %f  %f\n",obj->col.R,obj->col.G);
 
  // Be sure to update 'col' with the final colour computed here!
  return;
@@ -175,7 +179,19 @@ void findFirstHit(struct ray3D *ray, double *lambda, struct object3D *Os, struct
  // TO DO: Implement this function. See the notes for
  // reference of what to do in here
  /////////////////////////////////////////////////////////////
- Os->intersect(obj, ray, lambda, p, n, a, b);
+ *obj = object_list;
+ while(*obj != NULL){
+  if((*obj)->frontAndBack == 1){
+   (*obj)->intersect = &planeIntersect;
+   planeIntersect(*obj, ray, lambda, p, n, a, b);
+  }else{
+   sphereIntersect(*obj, ray, lambda, p, n, a, b);
+  }
+  if(lambda >= 0){
+   return;
+  }
+  *obj = object_list->next;
+ }
 }
 
 void rayTrace(struct ray3D *ray, int depth, struct colourRGB *col, struct object3D *Os)
@@ -191,7 +207,6 @@ void rayTrace(struct ray3D *ray, int depth, struct colourRGB *col, struct object
  // it will correspond to the object from which the recursive
  // ray originates.
  //
-
  double lambda;		// Lambda at intersection
  double a,b;		// Texture coordinates
  struct object3D *obj;	// Pointer to object at intersection
@@ -211,7 +226,10 @@ void rayTrace(struct ray3D *ray, int depth, struct colourRGB *col, struct object
  // TO DO: Complete this function. Refer to the notes
  // if you are unsure what to do here.
  ///////////////////////////////////////////////////////
-  
+ findFirstHit(ray, &lambda, Os, &obj, &p, &n, &a, &b);
+ if(obj != NULL){
+  rtShade(obj, &p, &n, ray, depth, a, b, col);
+ }
 }
 
 int main(int argc, char *argv[])
@@ -364,23 +382,42 @@ int main(int argc, char *argv[])
     // TO DO - complete the code that should be in this loop to do the
     //         raytracing!
     ///////////////////////////////////////////////////////////////////
-    struct point3D * origin = newPoint(0,0,0);
-    struct point3D * imagePlane = newPoint(0,0,0);
+    struct point3D * origin;
+    origin  = newPoint(0,0,0);
+    struct point3D * imagePlane;
+    imagePlane = newPoint(0,0,0);
     imagePlane->px = (-sx/2) + i + 0.5;
     imagePlane->py = (-sx/2) + j + 0.5;
     imagePlane->pz = -1;
     
     //Ray Direction
     struct point3D * direction;
-    *direction = *origin;
+    direction = origin;
     subVectors(imagePlane, direction);
-    
     //Convert to world-space
     matVecMult(cam->C2W, direction);
     matVecMult(cam->C2W, origin);
-    struct ray3D * ray = new Ray3D(origin, direction);
-
-     
+    struct ray3D * ray = newRay(origin, direction);
+    
+    struct colourRGB col;
+    col.R = 0; col.G = 0; col.B = 0; 
+    rayTrace(ray, MAX_DEPTH, &col, object_list);
+    
+    //Paint the RGB
+    *rgbIm  = col.R;
+    rgbIm++;
+    *rgbIm  = col.G;
+    rgbIm++;
+    *rgbIm  = col.B;
+    rgbIm++;
+    /*
+    *rgbIm  = 255;
+    rgbIm++;
+    *rgbIm  = 255;
+    rgbIm++;
+    *rgbIm  = 255;
+    rgbIm++;
+    */
   } // end for i
  } // end for j
 
@@ -395,3 +432,4 @@ int main(int argc, char *argv[])
  free(cam);					// camera view
  exit(0);
 }
+

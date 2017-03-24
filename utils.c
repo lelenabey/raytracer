@@ -196,9 +196,9 @@ void planeIntersect(struct object3D *plane, struct ray3D *ray, double *lambda, s
  // TO DO: Complete this function.
  /////////////////////////////////
  
- struct ray3D * origin = newRay(&(ray->p0), &(ray->d));
+ struct ray3D * origin;
+ origin = newRay(&(ray->p0), &(ray->d));
  rayTransform(ray, origin, plane);
- //Give lambda some value initially. DONT FORGET ABOUT THIS REEEEEEEEEEEEEEEEEVVVIIIIISSSIT!
  *lambda = -1;
  if(origin->d.pz == 0){
   return;
@@ -220,6 +220,7 @@ void sphereIntersect(struct object3D *sphere, struct ray3D *ray, double *lambda,
  /////////////////////////////////
  // TO DO: Complete this function.
  /////////////////////////////////
+  
 }
 
 void loadTexture(struct object3D *o, const char *filename)
