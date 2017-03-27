@@ -85,7 +85,7 @@ inline void normalTransform(struct point3D *n_orig, struct point3D *n_transforme
  // n_transformed=A^-T*n normalized.
 
  ///////////////////////////////////////////
- // TO DO: Complete this function
+ // TO DO: ComTe this function
  ///////////////////////////////////////////
  double C[4][4];
  int i,j,k;
@@ -204,12 +204,18 @@ void planeIntersect(struct object3D *plane, struct ray3D *ray, double *lambda, s
   return;
  }
  double t = (-1*(origin->p0.pz)) / origin->d.pz;
- *lambda = t;
+ /*if(t < 0){
+  return;
+ }*/
  p = newPoint(t*origin->d.px, t*origin->d.py, t*origin->d.pz);
  addVectors(&(origin->p0), p);
- n = newPoint(0,0,1);  
- normalTransform(newPoint(0,0,1), n, plane); 
- matVecMult(plane->Tinv, p);
+ n = newPoint(0,0,1);
+ //fprintf(stderr,"%f/%f, ",p->px,p->py); 
+ if(p->px >= -1 && p->px <= 1 && p->py >= -1 && p->py <= 1){ 
+  *lambda = t;
+  normalTransform(newPoint(0,0,1), n, plane); 
+  matVecMult(plane->Tinv, p);
+ }
 }
 
 void sphereIntersect(struct object3D *sphere, struct ray3D *ray, double *lambda, struct point3D *p, struct point3D *n, double *a, double *b)

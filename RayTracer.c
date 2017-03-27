@@ -26,6 +26,9 @@ struct object3D *object_list;
 struct pointLS *light_list;
 int MAX_DEPTH;
 
+//debug globals
+int intersect_count = 0;
+
 void buildScene(void)
 {
  // Sets up all objects in the scene. This involves creating each object,
@@ -187,7 +190,8 @@ void findFirstHit(struct ray3D *ray, double *lambda, struct object3D *Os, struct
   }else{
    sphereIntersect(*obj, ray, lambda, p, n, a, b);
   }
-  if(lambda >= 0){
+  if(*lambda >= 0){
+   intersect_count += 1;
    return;
   }
   *obj = object_list->next;
@@ -228,6 +232,7 @@ void rayTrace(struct ray3D *ray, int depth, struct colourRGB *col, struct object
  ///////////////////////////////////////////////////////
  findFirstHit(ray, &lambda, Os, &obj, &p, &n, &a, &b);
  if(obj != NULL){
+  //intersect_count += 1;
   rtShade(obj, &p, &n, ray, depth, a, b, col);
  }
 }
@@ -313,7 +318,7 @@ int main(int argc, char *argv[])
  // Camera center is at (0,0,-1)
  e.px=0;
  e.py=0;
- e.pz=-1;
+ e.pz=-3;
  e.pw=1;
 
  // To define the gaze vector, we choose a point 'pc' in the scene that
@@ -321,14 +326,14 @@ int main(int argc, char *argv[])
  // Here we set up the camera to be looking at the origin, so g=(0,0,0)-(0,0,-1)
  g.px=0;
  g.py=0;
- g.pz=1;
- g.pw=1;
+ g.pz=-1;
+ g.pw=0;
 
  // Define the 'up' vector to be the Y axis
  up.px=0;
  up.py=1;
  up.pz=0;
- up.pw=1;
+ up.pw=0;
 
  // Set up view with given the above vectors, a 4x4 window,
  // and a focal length of -1 (why? where is the image plane?)
@@ -383,22 +388,32 @@ int main(int argc, char *argv[])
     //         raytracing!
     ///////////////////////////////////////////////////////////////////
     struct point3D * origin;
-    origin  = newPoint(0,0,0);
+    origin  = newPoint(cam->e.px,cam->e.py,cam->e.pz);
+    //origin  = newPoint(0,0,0);
     struct point3D * imagePlane;
     imagePlane = newPoint(0,0,0);
+    /*
+    imagePlane->px = (-1*cam->wsize/2) + (i + 0.5)*du;
+    imagePlane->py = (-1*cam->wsize/2) + (j + 0.5)*dv;
+    imagePlane->pz = cam->f; 
+    */
+    /* 
     imagePlane->px = (-sx/2) + i + 0.5;
     imagePlane->py = (-sx/2) + j + 0.5;
-    imagePlane->pz = -1;
-    
+    imagePlane->pz = -3;
+    */
     //Ray Direction
     struct point3D * direction;
-    direction = origin;
-    subVectors(imagePlane, direction);
+    direction = imagePlane; 
+    subVectors(origin, direction);
+    direction->pw = 0;
     //Convert to world-space
     matVecMult(cam->C2W, direction);
     matVecMult(cam->C2W, origin);
+    direction->pw = 0;
     struct ray3D * ray = newRay(origin, direction);
-    
+    //fprintf(stderr,"%f/%f, \n",cam->e.px,cam->e.pz);
+    //fprintf(stderr,"%f/%f, \n",origin->px,origin->pz);
     struct colourRGB col;
     col.R = 0; col.G = 0; col.B = 0; 
     rayTrace(ray, MAX_DEPTH, &col, object_list);
@@ -421,6 +436,7 @@ int main(int argc, char *argv[])
   } // end for i
  } // end for j
 
+ fprintf(stderr,"%d, ", intersect_count);
  fprintf(stderr,"\nDone!\n");
 
  // Output rendered image
