@@ -72,9 +72,9 @@ inline void rayTransform(struct ray3D *ray_orig, struct ray3D *ray_transformed, 
  ///////////////////////////////////////////
   ray_transformed->p0 = ray_orig->p0;
   ray_transformed->d = ray_orig->d;
-
-  matVecMult(obj->T, &ray_transformed->p0);
-  matVecMult(obj->T, &ray_transformed->d);
+  
+  matVecMult(obj->Tinv, &ray_transformed->p0);
+  matVecMult(obj->Tinv, &ray_transformed->d);
 
 }
 
@@ -195,24 +195,31 @@ void planeIntersect(struct object3D *plane, struct ray3D *ray, double *lambda, s
  /////////////////////////////////
  // TO DO: Complete this function.
  /////////////////////////////////
- 
+ //fprintf(stderr,"before: %f/%f/%f, ", ray->d.px, ray->d.py, ray->d.pz);
  struct ray3D * origin;
  origin = newRay(&(ray->p0), &(ray->d));
+ origin->d.pw = 0;
  rayTransform(ray, origin, plane);
  *lambda = -1;
- if(origin->d.pz == 0){
-  return;
- }
- double t = (-1*(origin->p0.pz)) / origin->d.pz;
- /*if(t < 0){
+ /*if(origin->d.pz == 0){
   return;
  }*/
+ double t = (-origin->p0.pz) / origin->d.pz;
+ //fprintf(stderr,"before: %f/%f/%f, ", ray->p0.px, ray->p0.py, ray->p0.pz);
+ //fprintf(stderr,"after: %f/%f/%f, ", origin->d.px, origin->d.pz, origin->d.pz);
+ if(t < 0 || origin->d.pz == 0){
+  *lambda = -1;
+  return;
+ }
  p = newPoint(t*origin->d.px, t*origin->d.py, t*origin->d.pz);
  addVectors(&(origin->p0), p);
  n = newPoint(0,0,1);
+ n->pw = 0;
+ //fprintf(stderr,"result: %f", t);
+ //memcpy(lambda, &t, sizeof(double));
  //fprintf(stderr,"%f/%f, ",p->px,p->py); 
  if(p->px >= -1 && p->px <= 1 && p->py >= -1 && p->py <= 1){ 
-  *lambda = t;
+  memcpy(lambda, &t, sizeof(double));
   normalTransform(newPoint(0,0,1), n, plane); 
   matVecMult(plane->Tinv, p);
  }
@@ -550,7 +557,7 @@ struct view *setupView(struct point3D *e, struct point3D *g, struct point3D *up,
  c->w.px=-g->px;
  c->w.py=-g->py;
  c->w.pz=-g->pz;
- c->w.pw=1;
+ c->w.pw=0;
  normalize(&c->w);
 
  // Set up the horizontal direction, which must be perpenticular to w and up
@@ -559,7 +566,7 @@ struct view *setupView(struct point3D *e, struct point3D *g, struct point3D *up,
  c->u.px=u->px;
  c->u.py=u->py;
  c->u.pz=u->pz;
- c->u.pw=1;
+ c->u.pw=0;
 
  // Set up the remaining direction, v=(u x w)  - Mind the signs
  v=cross(&c->u, &c->w);
@@ -567,7 +574,7 @@ struct view *setupView(struct point3D *e, struct point3D *g, struct point3D *up,
  c->v.px=v->px;
  c->v.py=v->py;
  c->v.pz=v->pz;
- c->v.pw=1;
+ c->v.pw=0;
 
  // Copy focal length and window size parameters
  c->f=f;

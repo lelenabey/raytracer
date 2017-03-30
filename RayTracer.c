@@ -82,6 +82,7 @@ void buildScene(void)
 						// transform for this object!
  insertObject(o,&object_list);			// Insert into object list
 
+ 
  // Let's add a couple spheres
 /*
  o=newSphere(.05,.95,.35,.35,1,.25,.25,1,1,6);
@@ -185,8 +186,9 @@ void findFirstHit(struct ray3D *ray, double *lambda, struct object3D *Os, struct
  *obj = object_list;
  while(*obj != NULL){
   if((*obj)->frontAndBack == 1){
-   (*obj)->intersect = &planeIntersect;
-   planeIntersect(*obj, ray, lambda, p, n, a, b);
+   //(*obj)->intersect = &planeIntersect;
+   //planeIntersect(*obj, ray, lambda, p, n, a, b);
+    (*obj)->intersect(*obj, ray, lambda, p, n, a, b);
   }else{
    sphereIntersect(*obj, ray, lambda, p, n, a, b);
   }
@@ -318,7 +320,7 @@ int main(int argc, char *argv[])
  // Camera center is at (0,0,-1)
  e.px=0;
  e.py=0;
- e.pz=-3;
+ e.pz=-1;
  e.pw=1;
 
  // To define the gaze vector, we choose a point 'pc' in the scene that
@@ -326,7 +328,7 @@ int main(int argc, char *argv[])
  // Here we set up the camera to be looking at the origin, so g=(0,0,0)-(0,0,-1)
  g.px=0;
  g.py=0;
- g.pz=-1;
+ g.pz=1;
  g.pw=0;
 
  // Define the 'up' vector to be the Y axis
@@ -392,28 +394,30 @@ int main(int argc, char *argv[])
     //origin  = newPoint(0,0,0);
     struct point3D * imagePlane;
     imagePlane = newPoint(0,0,0);
-    /*
-    imagePlane->px = (-1*cam->wsize/2) + (i + 0.5)*du;
-    imagePlane->py = (-1*cam->wsize/2) + (j + 0.5)*dv;
+     
+    imagePlane->px = (cam->wl) + (i + 0.5)*du;
+    imagePlane->py = (cam->wt) + (j + 0.5)*dv;
     imagePlane->pz = cam->f; 
-    */
+    
     /* 
     imagePlane->px = (-sx/2) + i + 0.5;
     imagePlane->py = (-sx/2) + j + 0.5;
-    imagePlane->pz = -3;
+    imagePlane->pz = -1;
     */
     //Ray Direction
     struct point3D * direction;
-    direction = imagePlane; 
-    subVectors(origin, direction);
+    direction = newPoint(imagePlane->px - origin->px, imagePlane->py - origin->py, imagePlane->pz - origin->pz); 
+    //subVectors(origin, direction);
     direction->pw = 0;
+    fprintf(stderr,"%f/%f/%f direction before:, \n",direction->px, direction->py,direction->pz);
+    //fprintf(stderr,"%f/%f/%f  origin before:, \n",origin->px, origin->py,origin->pz);
     //Convert to world-space
     matVecMult(cam->C2W, direction);
-    matVecMult(cam->C2W, origin);
+    matVecMult(cam->C2W, imagePlane);
     direction->pw = 0;
-    struct ray3D * ray = newRay(origin, direction);
-    //fprintf(stderr,"%f/%f, \n",cam->e.px,cam->e.pz);
-    //fprintf(stderr,"%f/%f, \n",origin->px,origin->pz);
+    ray = newRay(origin, direction);
+    fprintf(stderr,"%f/%f/%f direction after:, \n",direction->px,direction->py,direction->pz);
+    //fprintf(stderr,"%f/%f/%f origin after:, \n",origin->px, origin->py,origin->pz);
     struct colourRGB col;
     col.R = 0; col.G = 0; col.B = 0; 
     rayTrace(ray, MAX_DEPTH, &col, object_list);
