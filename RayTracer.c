@@ -156,9 +156,56 @@ void rtShade(struct object3D *obj, struct point3D *p, struct point3D *n, struct 
  // TO DO: Implement this function. Refer to the notes for
  // details about the shading model.
  //////////////////////////////////////////////////////////////
- col->R = obj->col.R*255;
- col->G = obj->col.G*255;
- col->B = obj->col.B*255;
+ //col->R = obj->col.R*255;
+ //col->G = obj->col.G*255;
+ //col->B = obj->col.B*255;
+
+
+ double NL, LN, VR;
+ struct pointLS *light = light_list;
+
+ struct point3D *light_dir = newPoint(p->px - light->p0.px, p->py - light->p0.py, p->pz - light->p0.pz);
+ light_dir->pw = 0;
+ struct ray3D *light_ray = newRay(&light->p0, light_dir);
+
+ struct point3D *L = newPoint(light_ray->d.px, light_ray->d.py, light_ray->d.pz);
+ struct point3D *N = newPoint(n->px, n->py, n->pz);
+ struct point3D *V = newPoint(-ray->d.px, -ray->d.py, -ray->d.pz);
+ L->pw = 0;
+ N->pw = 0;
+ V->pw= 0;
+ normalize(L);
+ //normalize(N);
+ normalize(V);
+
+ LN = dot(L, N);
+
+ struct point3D *r = newPoint(2*LN*N->px - L->px, 2*LN*N->py - L->py, 2*LN*N->pz - L->pz);
+ r->pw = 0;
+
+ 
+ normalize(r);
+
+ NL = max(0, dot(N, L));
+printf("NL : %f\n", L->py);
+ VR = max(0, pow(dot(V, r), obj->shinyness));
+printf("VR %f\n", dot(V, r));
+
+col->R = (obj->alb.ra + (obj->alb.rd * NL) + (obj->alb.rs * VR))  *(light->col.R *255);
+col->G = (obj->alb.ra + (obj->alb.rd * NL) + (obj->alb.rs * VR))  *(light->col.G *255);
+col->B = (obj->alb.ra + (obj->alb.rd * NL) + (obj->alb.rs * VR))  *(light->col.B *255);
+
+//printf("R %f, %f, %f\n", obj->alb.ra ,(obj->alb.rd * NL), (obj->alb.rs * VR));
+printf("%f, %f, %f\n", col->R, col->G, col->B);
+//printf("%f, %f, %f\n", light->col.R, light->col.G, light->col.B);
+
+free(L);
+free(N);
+free(V);
+free(r);
+
+
+
  //fprintf(stderr,"r g b:  %f  %f\n",obj->col.R,obj->col.G);
 
  // Be sure to update 'col' with the final colour computed here!
