@@ -201,26 +201,30 @@ void planeIntersect(struct object3D *plane, struct ray3D *ray, double *lambda, s
  origin->d.pw = 0;
  rayTransform(ray, origin, plane);
  *lambda = -1;
- /*if(origin->d.pz == 0){
+ if(origin->d.pz == 0){
   return;
- }*/
+ }
  double t = (-origin->p0.pz) / origin->d.pz;
+ //printf("hdljfljsdhflsd\n");
  //fprintf(stderr,"before: %f/%f/%f, ", ray->p0.px, ray->p0.py, ray->p0.pz);
  //fprintf(stderr,"after: %f/%f/%f, ", origin->d.px, origin->d.pz, origin->d.pz);
  if(t < 0 || origin->d.pz == 0){
-  *lambda = -1;
+  //*lambda = -1;
   return;
  }
  p = newPoint(t*origin->d.px, t*origin->d.py, t*origin->d.pz);
  addVectors(&(origin->p0), p);
+
+ //struct point3D *n_o;
  n = newPoint(0,0,1);
  n->pw = 0;
  //fprintf(stderr,"result: %f", t);
  //memcpy(lambda, &t, sizeof(double));
  //fprintf(stderr,"%f/%f, ",p->px,p->py); 
  if(p->px >= -1 && p->px <= 1 && p->py >= -1 && p->py <= 1){ 
-  memcpy(lambda, &t, sizeof(double));
-  normalTransform(newPoint(0,0,1), n, plane); 
+  //memcpy(lambda, &t, sizeof(double));
+  *lambda = t;
+  normalTransform(n, n, plane); 
   matVecMult(plane->Tinv, p);
  }
 }
@@ -233,7 +237,44 @@ void sphereIntersect(struct object3D *sphere, struct ray3D *ray, double *lambda,
  /////////////////////////////////
  // TO DO: Complete this function.
  /////////////////////////////////
-  
+  struct ray3D * origin;
+ origin = newRay(&(ray->p0), &(ray->d));
+ origin->d.pw = 0;
+ rayTransform(ray, origin, sphere);
+ *lambda = -1;
+
+ double t, t1, t2, A, B, C;
+
+ A=dot(&origin->d, &origin->d);
+ B = 2* dot(&origin->d, &origin->p0);
+ C = dot(&origin->p0, &origin->p0) -1;
+
+ t1 = (-B - sqrt(B*B - 4 *A*C))/(2*A);
+ t2 = (-B + sqrt(B*B - 4 *A*C))/(2*A);
+
+ //printf("sjkdlakjshdljkshdlajshdlajdhlajsdhlajshd  %f, %f\n", t1, t2);
+
+if(t1 < t2 && t1 > 0){
+  t = t1;
+}
+else{
+  t = t2;
+}
+
+if (t < 0)
+  return;
+
+ p = newPoint(t*origin->d.px, t*origin->d.py, t*origin->d.pz);
+ addVectors(&(origin->p0), p);
+
+ //struct point3D *n_o;
+ n = newPoint(p->px, p->py, p->pz);
+ n->pw = 0;
+
+*lambda = t;
+normalTransform(n, n, sphere);
+matVecMult(sphere->T, p);
+
 }
 
 void loadTexture(struct object3D *o, const char *filename)
