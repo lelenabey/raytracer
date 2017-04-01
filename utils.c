@@ -225,6 +225,7 @@ void planeIntersect(struct object3D *plane, struct ray3D *ray, double *lambda, s
   //memcpy(lambda, &t, sizeof(double));
   *lambda = t;
   normalTransform(n, n, plane); 
+  //fprintf(stderr,"plane normal: %f/%f/%f,\n",n->px,n->py, n->pz);
   matVecMult(plane->Tinv, p);
  }
 }
@@ -248,7 +249,9 @@ void sphereIntersect(struct object3D *sphere, struct ray3D *ray, double *lambda,
  A=dot(&origin->d, &origin->d);
  B = 2* dot(&origin->d, &origin->p0);
  C = dot(&origin->p0, &origin->p0) -1;
-
+ if(B*B - 4 *A*C < 0){
+  return;
+ }
  t1 = (-B - sqrt(B*B - 4 *A*C))/(2*A);
  t2 = (-B + sqrt(B*B - 4 *A*C))/(2*A);
 
@@ -265,14 +268,15 @@ if (t < 0)
   return;
 
  p = newPoint(t*origin->d.px, t*origin->d.py, t*origin->d.pz);
+ fprintf(stdout,"sphere normal: %f/%f/%f,\n",sqrt(B*B - 4 *A*C),p->py, p->pz);
  addVectors(&(origin->p0), p);
-
  //struct point3D *n_o;
  n = newPoint(p->px, p->py, p->pz);
  n->pw = 0;
 
 *lambda = t;
 normalTransform(n, n, sphere);
+//fprintf(stdout,"sphere normal: %f/%f/%f,\n",p->px,p->py, p->pz);
 matVecMult(sphere->T, p);
 
 }

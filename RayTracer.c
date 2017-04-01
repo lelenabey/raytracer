@@ -182,27 +182,33 @@ void rtShade(struct object3D *obj, struct point3D *p, struct point3D *n, struct 
 
  struct point3D *r = newPoint(2*LN*N->px - L->px, 2*LN*N->py - L->py, 2*LN*N->pz - L->pz);
  r->pw = 0;
-
  
  normalize(r);
 
  NL = max(0, dot(N, L));
-printf("NL : %f\n", L->py);
+ //printf("NL : %f\n", L->py);
  VR = max(0, pow(dot(V, r), obj->shinyness));
-printf("VR %f\n", dot(V, r));
+ //printf("VR %f\n", dot(V, r));
 
-col->R = (obj->alb.ra + (obj->alb.rd * NL) + (obj->alb.rs * VR))  *(light->col.R *255);
-col->G = (obj->alb.ra + (obj->alb.rd * NL) + (obj->alb.rs * VR))  *(light->col.G *255);
-col->B = (obj->alb.ra + (obj->alb.rd * NL) + (obj->alb.rs * VR))  *(light->col.B *255);
+ double amb = obj->alb.ra;
+ double diff = obj->alb.rd * NL;
+ double spec = obj->alb.rs * VR;
+
+ col->R = 255*(((amb + diff)*obj->col.R) + spec)*light->col.R;
+ col->G = 255*(((amb + diff)*obj->col.G) + spec)*light->col.G;
+ col->B = 255*(((amb + diff)*obj->col.B) + spec)*light->col.B;
+
 
 //printf("R %f, %f, %f\n", obj->alb.ra ,(obj->alb.rd * NL), (obj->alb.rs * VR));
-printf("%f, %f, %f\n", col->R, col->G, col->B);
-//printf("%f, %f, %f\n", light->col.R, light->col.G, light->col.B);
+ //printf("%f, %f, %f\n", col->R, col->G, col->B);
+ printf("%f, %f, %f\n", N->px, N->py, N->pz);
+ printf("%f, %f, %f\n", L->px, L->py, L->pz);
+ printf("%f, %f, %f\n", V->px, V->py, V->pz); 
 
-free(L);
-free(N);
-free(V);
-free(r);
+ free(L);
+ free(N);
+ free(V);
+ free(r);
 
 
 
@@ -234,40 +240,27 @@ void findFirstHit(struct ray3D *ray, double *lambda, struct object3D *Os, struct
 	double tlambda; // temp variables
 	struct point3D tp;
 	struct point3D tn;
-//printf("findFirstHit1\n");
+        n = newPoint(0,0,0);
+        p = newPoint(0,0,0);
 	if(object_list == NULL){
 		return;
 	}
 	walker = object_list;
-//printf("findFirstHit2\n");
 	while(walker != NULL){
- 	//printf("findFirstHit3\n");
 		if(walker != Os){
-  //if((*obj)->frontAndBack == 1){
-   //(*obj)->intersect = &planeIntersect;
-   //planeIntersect(*obj, ray, lambda, p, n, a, b);
- 	//	printf("sndaskdnaksljsndaj\n");
 			walker->intersect(walker, ray, &tlambda, &tp, &tn, a, b);
-  /*}else{
-   sphereIntersect(*obj, ray, lambda, p, n, a, b);
-  }*/
-    //printf("findFirstHit5\n");
-    //printf("%f\n", tlambda);
-			if(tlambda >= 0 && (*lambda == -1 || tlambda < *lambda)){
+   			if(tlambda >= 0 && (*lambda == -1 || tlambda < *lambda)){
 				intersect_count += 1;
-  // printf("findFirstHit6\n");
 				*obj = walker;
 				*lambda = tlambda;
-//		printf("findFirstHit4\n");
 				*p = tp;
 				*n = tn;
+                       		//printf("returned: %f, %f, %f, %f\n", n->px, n->py, n->pz, tlambda);
 			}
 		}
-//printf("findFirstHit7\n");
 		walker = walker->next;
-  //printf("findFirstHit8\n");
 	}
- //printf("findFirstHit9\n");
+	free(walker);
 	return;
 }
 
@@ -462,7 +455,6 @@ int main(int argc, char *argv[])
     ///////////////////////////////////////////////////////////////////
  		struct point3D * origin;
  		origin  = newPoint(cam->e.px,cam->e.py,cam->e.pz);
-    //origin  = newPoint(0,0,0);
  		struct point3D * imagePlane;
  		imagePlane = newPoint(0,0,0);
 
@@ -470,46 +462,30 @@ int main(int argc, char *argv[])
  		imagePlane->py = (cam->wt) + (j + 0.5)*dv;
  		imagePlane->pz = cam->f; 
 
-    /* 
-    imagePlane->px = (-sx/2) + i + 0.5;
-    imagePlane->py = (-sx/2) + j + 0.5;
-    imagePlane->pz = -1;
-    */
-    //Ray Direction
- 		struct point3D * direction;
-    //direction = newPoint(imagePlane->px - origin->px, imagePlane->py - origin->py, imagePlane->pz - origin->pz); 
+ 		//Ray Direction
+ 		struct point3D * direction; 
  		direction = newPoint(imagePlane->px, imagePlane->py, imagePlane->pz); 
  		subVectors(origin, direction);
  		direction->pw = 0;
-    //fprintf(stderr,"%f/%f/%f direction before:, \n",direction->px, direction->py,direction->pz);
-    //fprintf(stderr,"%f/%f/%f  origin before:, \n",origin->px, origin->py,origin->pz);
-    //Convert to world-space
+    		//Convert to world-space
  		matVecMult(cam->C2W, direction);
  		matVecMult(cam->C2W, origin);
  		direction->pw = 0;
  		ray = newRay(origin, direction);
-    //fprintf(stderr,"%f/%f/%f direction after:, \n",direction->px,direction->py,direction->pz);
-    //fprintf(stderr,"%f/%f/%f origin after:, \n",origin->px, origin->py,origin->pz);
+    
  		struct colourRGB col;
  		col.R = 0; col.G = 0; col.B = 0; 
  		rayTrace(ray, MAX_DEPTH, &col, NULL);
 
-    //Paint the RGB
+    		//Paint the RGB
  		*rgbIm  = col.R;
  		rgbIm++;
  		*rgbIm  = col.G;
  		rgbIm++;
  		*rgbIm  = col.B;
  		rgbIm++;
-    /*
-    *rgbIm  = 255;
-    rgbIm++;
-    *rgbIm  = 255;
-    rgbIm++;
-    *rgbIm  = 255;
-    rgbIm++;
-    */
-  } // end for i
+ 
+  	} // end for i
  } // end for j
 
 
