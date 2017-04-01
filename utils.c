@@ -212,21 +212,26 @@ void planeIntersect(struct object3D *plane, struct ray3D *ray, double *lambda, s
   //*lambda = -1;
   return;
  }
- p = newPoint(t*origin->d.px, t*origin->d.py, t*origin->d.pz);
+ //p = newPoint(t*origin->d.px, t*origin->d.py, t*origin->d.pz);
+ p->px = t*origin->d.px;
+ p->py = t*origin->d.py;
+ p->pz = t*origin->d.pz;
  addVectors(&(origin->p0), p);
-
- //struct point3D *n_o;
- n = newPoint(0,0,1);
+ 
+ //struct point3D * tn;
+ //n = newPoint(0,0,1);
+ n->px = 0;
+ n->py = 0;
+ n->pz = 1;
  n->pw = 0;
- //fprintf(stderr,"result: %f", t);
  //memcpy(lambda, &t, sizeof(double));
  //fprintf(stderr,"%f/%f, ",p->px,p->py); 
  if(p->px >= -1 && p->px <= 1 && p->py >= -1 && p->py <= 1){ 
-  //memcpy(lambda, &t, sizeof(double));
   *lambda = t;
   normalTransform(n, n, plane); 
   //fprintf(stderr,"plane normal: %f/%f/%f,\n",n->px,n->py, n->pz);
   matVecMult(plane->Tinv, p);
+  //fprintf(stderr,"plane normal: %f/%f/%f,\n",n->px,n->py, n->pz);
  }
 }
 
@@ -264,15 +269,25 @@ else{
   t = t2;
 }
 
-if (t < 0)
+if (t < 0){
   return;
+}
+ p->px = t*origin->d.px;
+ p->py = t*origin->d.py;
+ p->pz = t*origin->d.pz;
+ addVectors(&(origin->p0), p);
 
- p = newPoint(t*origin->d.px, t*origin->d.py, t*origin->d.pz);
- fprintf(stdout,"sphere normal: %f/%f/%f,\n",sqrt(B*B - 4 *A*C),p->py, p->pz);
+ n->px = -p->px;
+ n->py = -p->py;
+ n->pz = -p->pz;
+ n->pw = 0;
+
+ //p = newPoint(t*origin->d.px, t*origin->d.py, t*origin->d.pz);
+ //fprintf(stdout,"sphere normal: %f/%f/%f,\n",sqrt(B*B - 4 *A*C),p->py, p->pz);
  addVectors(&(origin->p0), p);
  //struct point3D *n_o;
- n = newPoint(p->px, p->py, p->pz);
- n->pw = 0;
+ //n = newPoint(p->px, p->py, p->pz);
+ //n->pw = 0;
 
 *lambda = t;
 normalTransform(n, n, sphere);

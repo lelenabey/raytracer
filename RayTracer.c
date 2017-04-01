@@ -167,6 +167,15 @@ void rtShade(struct object3D *obj, struct point3D *p, struct point3D *n, struct 
  struct point3D *light_dir = newPoint(p->px - light->p0.px, p->py - light->p0.py, p->pz - light->p0.pz);
  light_dir->pw = 0;
  struct ray3D *light_ray = newRay(&light->p0, light_dir);
+ 
+ struct object3D *light_obj = NULL;
+ double lambda;
+ findFirstHit(light_ray, &lambda, NULL, &obj, p, n, &a, &b);
+ 
+ if(light_obj != obj){
+ 	//printf("shadow");
+        //return;	    
+ }
 
  struct point3D *L = newPoint(light_ray->d.px, light_ray->d.py, light_ray->d.pz);
  struct point3D *N = newPoint(n->px, n->py, n->pz);
@@ -198,12 +207,16 @@ void rtShade(struct object3D *obj, struct point3D *p, struct point3D *n, struct 
  col->G = 255*(((amb + diff)*obj->col.G) + spec)*light->col.G;
  col->B = 255*(((amb + diff)*obj->col.B) + spec)*light->col.B;
 
+ // make sure that the colors are bound by [0, 255]
+ col->R = max(0, -1*max(-255, -col->R));
+ col->G = max(0, -1*max(-255, -col->G));
+ col->B = max(0, -1*max(-255, -col->B));
 
 //printf("R %f, %f, %f\n", obj->alb.ra ,(obj->alb.rd * NL), (obj->alb.rs * VR));
  //printf("%f, %f, %f\n", col->R, col->G, col->B);
- printf("%f, %f, %f\n", N->px, N->py, N->pz);
- printf("%f, %f, %f\n", L->px, L->py, L->pz);
- printf("%f, %f, %f\n", V->px, V->py, V->pz); 
+ //printf("%f, %f, %f\n", N->px, N->py, N->pz);
+ //printf("%f, %f, %f\n", L->px, L->py, L->pz);
+ //printf("%f, %f, %f\n", V->px, V->py, V->pz); 
 
  free(L);
  free(N);
@@ -240,7 +253,7 @@ void findFirstHit(struct ray3D *ray, double *lambda, struct object3D *Os, struct
 	double tlambda; // temp variables
 	struct point3D tp;
 	struct point3D tn;
-        n = newPoint(0,0,0);
+        //n = newPoint(1,0,0);
         p = newPoint(0,0,0);
 	if(object_list == NULL){
 		return;
@@ -254,7 +267,9 @@ void findFirstHit(struct ray3D *ray, double *lambda, struct object3D *Os, struct
 				*obj = walker;
 				*lambda = tlambda;
 				*p = tp;
-				*n = tn;
+ 				*n = tn;
+				//printf("returned: %f, %f, %f, %f\n", tn.px, tn.py, tn.pz, tlambda);
+				//n = newPoint(tn.px, tn.py, tn.pz);
                        		//printf("returned: %f, %f, %f, %f\n", n->px, n->py, n->pz, tlambda);
 			}
 		}
