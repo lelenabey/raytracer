@@ -277,9 +277,9 @@ if (t < 0){
  p->pz = t*origin->d.pz;
  addVectors(&(origin->p0), p);
 
- n->px = -p->px;
- n->py = -p->py;
- n->pz = -p->pz;
+ n->px = p->px;
+ n->py = p->py;
+ n->pz = p->pz;
  n->pw = 0;
 
  //p = newPoint(t*origin->d.px, t*origin->d.py, t*origin->d.pz);
