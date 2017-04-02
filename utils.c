@@ -195,41 +195,38 @@ void planeIntersect(struct object3D *plane, struct ray3D *ray, double *lambda, s
  /////////////////////////////////
  // TO DO: Complete this function.
  /////////////////////////////////
- //fprintf(stderr,"before: %f/%f/%f, ", ray->d.px, ray->d.py, ray->d.pz);
  struct ray3D * origin;
  origin = newRay(&(ray->p0), &(ray->d));
  origin->d.pw = 0;
  rayTransform(ray, origin, plane);
  *lambda = -1;
+ /*if(*a == 3){
+  fprintf(stderr,"%f/%f, \n",(-origin->p0.pz), origin->d.pz);
+ }*/
  if(origin->d.pz == 0){
   return;
  }
  double t = (-origin->p0.pz) / origin->d.pz;
- //printf("hdljfljsdhflsd\n");
- //fprintf(stderr,"before: %f/%f/%f, ", ray->p0.px, ray->p0.py, ray->p0.pz);
- //fprintf(stderr,"after: %f/%f/%f, ", origin->d.px, origin->d.pz, origin->d.pz);
  if(t < 0 || origin->d.pz == 0){
   //*lambda = -1;
   return;
  }
- //p = newPoint(t*origin->d.px, t*origin->d.py, t*origin->d.pz);
  p->px = t*origin->d.px;
  p->py = t*origin->d.py;
  p->pz = t*origin->d.pz;
  addVectors(&(origin->p0), p);
  
- //struct point3D * tn;
- //n = newPoint(0,0,1);
  n->px = 0;
  n->py = 0;
- n->pz = 1;
+ n->pz = -1;
  n->pw = 0;
- //memcpy(lambda, &t, sizeof(double));
- //fprintf(stderr,"%f/%f, ",p->px,p->py); 
- if(p->px >= -1 && p->px <= 1 && p->py >= -1 && p->py <= 1){ 
+ //memcpy(lambda, &t, sizeof(double)); 
+ if(p->px >= -1 && p->px <= 1 && p->py >= -1 && p->py <= 1){
+  if(*a == 3){ 
+  	fprintf(stderr,"plane normal: %f/%f/%f,\n",n->px,n->py, n->pz);
+  } 
   *lambda = t;
   normalTransform(n, n, plane); 
-  //fprintf(stderr,"plane normal: %f/%f/%f,\n",n->px,n->py, n->pz);
   matVecMult(plane->Tinv, p);
   //fprintf(stderr,"plane normal: %f/%f/%f,\n",n->px,n->py, n->pz);
  }

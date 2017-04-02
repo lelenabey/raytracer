@@ -166,36 +166,48 @@ void rtShade(struct object3D *obj, struct point3D *p, struct point3D *n, struct 
  struct pointLS *light = light_list;
 
  struct point3D *shadow_dir = newPoint(p->px - light->p0.px, p->py - light->p0.py, p->pz - light->p0.pz); // calculating and assinging light ray
- shadow_dir->pw = p->pw - light->p0.pw;
+ shadow_dir->pw = 0;
  
 
  struct point3D *light_dir = newPoint(light->p0.px - p->px, light->p0.py - p->py, light->p0.pz - p->pz); // calculating and assinging light ray
- light_dir->pw = light->p0.pw - p->pw;
-
- struct ray3D *light_ray = newRay(&light->p0, light_dir);
-
+ light_dir->pw = 0;
+ struct ray3D *light_ray = newRay(&(light->p0), light_dir);
  struct ray3D *shadow_ray = newRay(p, shadow_dir);
  
  struct object3D *light_obj = NULL;
  double tlambda = -1; // temp variables
-	struct point3D tp;
-	struct point3D tn;
+ struct point3D tp;
+ struct point3D tn;
+ double ta = 3;
+ //printf("returned: %f, %f, %f\n", light->p0.px, light->p0.py, light->p0.pz);
+ //printf("returned: %f, %f, %f\n", light_dir->px, light_dir->py, light_dir->pz);
+ //printf("returned: %f, %f, %f, %f\n", p->px, p->py, p->pz, tlambda);
+ findFirstHit(shadow_ray, &tlambda, obj, &light_obj, p, n, &ta, &b);
+ if(light_obj != NULL){
+  //printf("diff: %f, %f", light_obj->col.R, obj->col.R);
+  printf("diff: %f, %f", obj->col.R, obj->col.G);
+  //printf("returned: %f, %f, %f, %f\n", p->px, p->py, p->pz, tlambda);
+  col->R = 0;
+  col->G = 0;
+  col->B = 50;
 
- findFirstHit(shadow_ray, &tlambda, obj, &light_obj, &tp, &tn, &a, &b);
+  return;
+ }
+ findFirstHit(light_ray, &tlambda, obj, &light_obj, p, n, &a, &b);
  	// printf("shadow");
  	// printf("%f, %f, %f\n", shadow_dir->px, shadow_dir->py, shadow_dir->pz);
  	// printf("light");
  	// printf("%f, %f, %f\n", light_dir->px, light_dir->py, light_dir->pz);
- printf("%f", tlambda);
- printf("objects %f, %f\n", obj, light_obj);
- if(tlambda != -1){
+ //printf("%f", tlambda);
+ //printf("objects %f, %f\n", obj, light_obj);
+/* if(tlambda != -1){
  	
  	col->R = 0;
  	col->G = 150;
  	col->B = 150;
 
     return;	    
- }
+ }*/
 
 
  //phong
@@ -276,7 +288,7 @@ void findFirstHit(struct ray3D *ray, double *lambda, struct object3D *Os, struct
 	struct point3D tp;
 	struct point3D tn;
         //n = newPoint(1,0,0);
-        p = newPoint(0,0,0);
+        //p = newPoint(0,0,0);
 	if(object_list == NULL){
 		return;
 	}
@@ -284,6 +296,9 @@ void findFirstHit(struct ray3D *ray, double *lambda, struct object3D *Os, struct
 	while(walker != NULL){
 		if(walker != Os){
 			walker->intersect(walker, ray, &tlambda, &tp, &tn, a, b);
+ 			if(*a == 3 && tlambda >= 0){
+				printf("returned: %f\n", tlambda);
+			} 
    			if(tlambda >= 0 && (*lambda == -1 || tlambda < *lambda)){
 				intersect_count += 1;
 				*obj = walker;
@@ -292,7 +307,7 @@ void findFirstHit(struct ray3D *ray, double *lambda, struct object3D *Os, struct
  				*n = tn;
 				//printf("returned: %f, %f, %f, %f\n", tn.px, tn.py, tn.pz, tlambda);
 				//n = newPoint(tn.px, tn.py, tn.pz);
-                       		//printf("returned: %f, %f, %f, %f\n", n->px, n->py, n->pz, tlambda);
+                       		//printf("returned: %f, %f, %f, %f\n", p->px, p->py, p->pz, tlambda);
 			}
 		}
 		walker = walker->next;
