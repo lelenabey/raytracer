@@ -191,7 +191,7 @@ void rtShade(struct object3D *obj, struct point3D *p, struct point3D *n, struct 
   //printf("returned: %f, %f, %f, %f\n", p->px, p->py, p->pz, tlambda);
   col->R = 0;
   col->G = 0;
-  col->B = 200;
+  col->B = 0;
 
   return;
  }
@@ -202,14 +202,14 @@ void rtShade(struct object3D *obj, struct point3D *p, struct point3D *n, struct 
  	// printf("%f, %f, %f\n", light_dir->px, light_dir->py, light_dir->pz);
  //printf("%f", tlambda);
  //printf("objects %f, %f\n", obj, light_obj);
- if(tlambda != -1){
+ // if(tlambda != -1){
  	
- 	col->R = 0;
- 	col->G = 150;
- 	col->B = 150;
+ // 	col->R = 0;
+ // 	col->G = 150;
+ // 	col->B = 150;
 
-    return;	    
- }
+ //    return;	    
+ // }
 
 
  //phong

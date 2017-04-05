@@ -70,8 +70,8 @@ inline void rayTransform(struct ray3D *ray_orig, struct ray3D *ray_transformed, 
  ///////////////////////////////////////////
  // TO DO: Complete this function
  ///////////////////////////////////////////
-  memcpy(&ray_transformed->p0, &ray_orig->p0, 4*sizeof(double));
-  memcpy(&ray_transformed->d, &ray_orig->d, 4*sizeof(double));
+  memcpy(&ray_transformed->p0, &ray_orig->p0, sizeof(struct point3D));
+  memcpy(&ray_transformed->d, &ray_orig->d, sizeof(struct point3D));
   
   matVecMult(obj->Tinv, &ray_transformed->p0);
   matVecMult(obj->Tinv, &ray_transformed->d);
@@ -200,7 +200,7 @@ void planeIntersect(struct object3D *plane, struct ray3D *ray, double *lambda, s
  struct point3D *tn, *new_ray_d, *new_ray_p;
  new_ray_d = newPoint(0 ,0 ,0);
  new_ray_p = newPoint(0, 0, 0);
- new_ray_p->pw = 1;
+ //new_ray_p->pw = 1;
  new_ray_d->pw = 0;
  origin = newRay(new_ray_p, new_ray_d);
  rayTransform(ray, origin, plane);
@@ -235,7 +235,7 @@ void planeIntersect(struct object3D *plane, struct ray3D *ray, double *lambda, s
   } 
   *lambda = t;
   normalTransform(tn, n, plane); 
-  matVecMult(plane->Tinv, p);
+  matVecMult(plane->T, p);
   //fprintf(stderr,"plane normal: %f/%f/%f,\n",n->px,n->py, n->pz);
  }
 }
