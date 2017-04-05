@@ -227,7 +227,7 @@ void planeIntersect(struct object3D *plane, struct ray3D *ray, double *lambda, s
  // n->py = 0;
  // n->pz = 1;
  tn = newPoint(0, 0, 1);
- tn->pw = 0;
+ //tn->pw = 0;
  //memcpy(lambda, &t, sizeof(double)); 
  if(p->px >= -1 && p->px <= 1 && p->py >= -1 && p->py <= 1){
   if(*a == 3){ 
@@ -293,7 +293,7 @@ rayPosition(origin, t, p);
  // n->pz = -p->pz;
  // n->pw = 0;
  tn = newPoint(-p->px, -p->py, -p->pz);
- tn->pw = 0;
+ //tn->pw = 0;
  //p = newPoint(t*origin->d.px, t*origin->d.py, t*origin->d.pz);
  //fprintf(stdout,"sphere normal: %f/%f/%f,\n",sqrt(B*B - 4 *A*C),p->py, p->pz);
  //addVectors(&(origin->p0), p);

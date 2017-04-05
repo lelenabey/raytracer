@@ -187,7 +187,7 @@ void rtShade(struct object3D *obj, struct point3D *p, struct point3D *n, struct 
  //printf("returned: %f, %f, %f, %f\n", p->px, p->py, p->pz, tlambda);
  if(light_obj != NULL){
   //printf("diff: %f, %f", light_obj->col.R, obj->col.R);
-  printf("diff: %f, %f", obj->col.R, obj->col.G);
+  //printf("diff: %f, %f", obj->col.R, obj->col.G);
   //printf("returned: %f, %f, %f, %f\n", p->px, p->py, p->pz, tlambda);
   col->R = 0;
   col->G = 0;
@@ -239,14 +239,41 @@ void rtShade(struct object3D *obj, struct point3D *p, struct point3D *n, struct 
  double diff = obj->alb.rd * NL;
  double spec = obj->alb.rs * VR;
 
- col->R = 255*(((amb + diff)*obj->col.R) + spec)*light->col.R;
- col->G = 255*(((amb + diff)*obj->col.G) + spec)*light->col.G;
- col->B = 255*(((amb + diff)*obj->col.B) + spec)*light->col.B;
+ tmp_col.R = R*(amb + diff + spec)*light->col.R*200;
+ tmp_col.G = G*(amb + diff + spec)*light->col.G*200;
+ tmp_col.B = B*(amb + diff + spec)*light->col.B*200;
 
  // make sure that the colors are bound by [0, 255]
+
+ col->R += tmp_col.R;
+ col->G += tmp_col.G;
+ col->B += tmp_col.B;
+
+printf("Depth : %i\n", depth);
+
+
+ if (depth < MAX_DEPTH){
+    struct point3D *reflect_p = p;
+    
+    double dn = dot(&(ray->d), n);
+
+    struct point3D *reflect_d = newPoint(ray->d.px - 2*dn*n->px, ray->d.py - 2*dn*n->py, ray->d.pz - 2*dn*n->pz);
+    reflect_d->pw = 0;
+    printf("returned: %f, %f, %f, %f\n", reflect_d->px, reflect_d->py, reflect_d->pz, reflect_d->pw);
+    //normalize(reflect_d);
+    struct ray3D * reflected = newRay(reflect_p, reflect_d);
+    rayTrace(reflected, depth+1, col, obj);
+
+    //free(reflect_p);
+    free(reflect_d);
+    free(reflected);
+
+ }
+ 
  col->R = max(0, -1*max(-255, -col->R));
  col->G = max(0, -1*max(-255, -col->G));
  col->B = max(0, -1*max(-255, -col->B));
+
 
 //printf("R %f, %f, %f\n", obj->alb.ra ,(obj->alb.rd * NL), (obj->alb.rs * VR));
  //printf("%f, %f, %f\n", col->R, col->G, col->B);
@@ -529,7 +556,7 @@ int main(int argc, char *argv[])
     
  		struct colourRGB col;
  		col.R = 0; col.G = 0; col.B = 0; 
- 		rayTrace(ray, MAX_DEPTH, &col, NULL);
+ 		rayTrace(ray, 0, &col, NULL);
 
     		//Paint the RGB
  		*rgbIm  = col.R;
