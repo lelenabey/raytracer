@@ -238,10 +238,11 @@ void rtShade(struct object3D *obj, struct point3D *p, struct point3D *n, struct 
  double amb = obj->alb.ra;
  double diff = obj->alb.rd * NL;
  double spec = obj->alb.rs * VR;
-
- tmp_col.R = R*(amb + diff + spec)*light->col.R*200;
- tmp_col.G = G*(amb + diff + spec)*light->col.G*200;
- tmp_col.B = B*(amb + diff + spec)*light->col.B*200;
+ 
+ //Only multiply obj color by amb and diff, raytrace tut part2 slide 5.
+ tmp_col.R = (R*(amb + diff) + spec)*light->col.R*200;
+ tmp_col.G = (G*(amb + diff) + spec)*light->col.G*200;
+ tmp_col.B = (B*(amb + diff) + spec)*light->col.B*200;
 
  // make sure that the colors are bound by [0, 255]
 
@@ -249,7 +250,7 @@ void rtShade(struct object3D *obj, struct point3D *p, struct point3D *n, struct 
  col->G += tmp_col.G;
  col->B += tmp_col.B;
 
-printf("Depth : %i\n", depth);
+//printf("Depth : %i\n", depth);
 
 
  if (depth < MAX_DEPTH){
@@ -259,7 +260,7 @@ printf("Depth : %i\n", depth);
 
     struct point3D *reflect_d = newPoint(ray->d.px - 2*dn*n->px, ray->d.py - 2*dn*n->py, ray->d.pz - 2*dn*n->pz);
     reflect_d->pw = 0;
-    printf("returned: %f, %f, %f, %f\n", reflect_d->px, reflect_d->py, reflect_d->pz, reflect_d->pw);
+    //printf("returned: %f, %f, %f, %f\n", reflect_d->px, reflect_d->py, reflect_d->pz, reflect_d->pw);
     //normalize(reflect_d);
     struct ray3D * reflected = newRay(reflect_p, reflect_d);
     rayTrace(reflected, depth+1, col, obj);
@@ -404,7 +405,7 @@ int main(int argc, char *argv[])
  struct colourRGB col;		// Return colour for raytraced pixels
 
   struct colourRGB background;   // Background colour
- int i,j;			// Counters for pixel coordinates
+ int i,j,k,l;			// Counters for pixel coordinates
  unsigned char *rgbIm;
 
  if (argc<5)
@@ -465,7 +466,7 @@ int main(int argc, char *argv[])
  // Camera center is at (0,0,-1)
  e.px=0;
  e.py=0;
- e.pz=-1;
+ e.pz=-3;
  e.pw=1;
 
  // To define the gaze vector, we choose a point 'pc' in the scene that
@@ -473,7 +474,7 @@ int main(int argc, char *argv[])
  // Here we set up the camera to be looking at the origin, so g=(0,0,0)-(0,0,-1)
  g.px=0;
  g.py=0;
- g.pz=1;
+ g.pz=3;
  g.pw=0;
 
  // Define the 'up' vector to be the Y axis
@@ -524,6 +525,12 @@ int main(int argc, char *argv[])
  printmatrix(cam->W2C);
  fprintf(stderr,"\n");
 
+ struct colourRGB supersampledColor;
+ struct point3D * imagePlane;
+ struct point3D * origin;
+ struct point3D * direction;
+ //set to 1 if you want no anti-aliasing
+ int supersamplingSize = 4;
  fprintf(stderr,"Rendering row: ");
  for (j=0;j<sx;j++)		// For each of the pixels in the image
  {
@@ -534,31 +541,60 @@ int main(int argc, char *argv[])
     // TO DO - complete the code that should be in this loop to do the
     //         raytracing!
     ///////////////////////////////////////////////////////////////////
- 		struct point3D * origin;
- 		origin  = newPoint(cam->e.px,cam->e.py,cam->e.pz);
- 		struct point3D * imagePlane;
- 		imagePlane = newPoint(0,0,0);
-
- 		imagePlane->px = (cam->wl) + (i + 0.5)*du;
- 		imagePlane->py = (cam->wt) + (j + 0.5)*dv;
- 		imagePlane->pz = cam->f; 
-
- 		//Ray Direction
- 		struct point3D * direction; 
- 		direction = newPoint(imagePlane->px, imagePlane->py, imagePlane->pz); 
- 		subVectors(origin, direction);
- 		direction->pw = 0;
-    		//Convert to world-space
- 		matVecMult(cam->C2W, direction);
- 		matVecMult(cam->C2W, origin);
- 		direction->pw = 0;
- 		ray = newRay(origin, direction);
-    
- 		struct colourRGB col;
- 		col.R = 0; col.G = 0; col.B = 0; 
- 		rayTrace(ray, 0, &col, NULL);
-
-    		//Paint the RGB
+		origin  = newPoint(0,0,0);//newPoint(cam->e.px,cam->e.py,cam->e.pz);
+		imagePlane = newPoint(0,0,0);
+ 		/*pc.px = 0;
+		pc.py = 0;
+		pc.pz = 0;
+		pc.pw = 0;
+		*/
+		col.R = 0; col.G = 0; col.B = 0;
+		supersampledColor.R = 0; supersampledColor.G = 0; supersampledColor.B = 0;
+		l=0;k=0;	
+		for (l=0;l<supersamplingSize;l++)
+		{
+			for(k=0;k<supersamplingSize;k++)
+			{
+				double dx = (0.5 + (1.0*k))/supersamplingSize;
+				double dy = (0.5 + (1.0*l))/supersamplingSize;
+		 		imagePlane->px = (cam->wl) + (i + dx)*du;
+		 		imagePlane->py = (cam->wt) + (j + dy)*dv;
+		 		imagePlane->pz = cam->f;
+ 				/*d.px = (cam->wl) + (i + dx)*du;
+                                d.py = (cam->wt) + (j + dy)*dv;
+                                d.pz = cam->f;
+			        d.pw = 0;*/ 
+		                //fprintf(stderr,"(%d, %d): %f/%f, \n",l, k, d.px, d.py);
+		 		//Ray Direction 
+		 		direction = newPoint(imagePlane->px, imagePlane->py, imagePlane->pz); 	
+				subVectors(origin, direction);
+				//fprintf(stderr,"(%d, %d): %f/%f, \n",1, 1, d.px, d.py);
+		 		direction->pw = 0;
+			    	//Convert to world-space
+		 		matVecMult(cam->C2W, direction);
+		 		matVecMult(cam->C2W, origin);
+				//matVecMult(cam->C2W, &d);
+                                //matVecMult(cam->C2W, &pc);
+		 		direction->pw = 0;
+				d.pw = 0;
+		 		ray = newRay(origin, direction);
+				//ray = newRay(&pc, &d);
+		 		rayTrace(ray, 0, &col, NULL);
+				//weight the color using a gaussian
+				//double colorWeightk = (1/(0.5*sqrt(2*PI))) * exp(-1*(pow((k-(supersamplingSize/2)),2))/(2*0.25));
+				//double colorWeightl = (1/(0.5*sqrt(2*PI))) * exp(-1*(pow((l-(supersamplingSize/2)),2))/(2*0.25));
+				double colorWeight = 1;//(-1*(max(-1*colorWeightk, -1*colorWeightl)));
+				//printf("d: %d, p:%f, result: %f\n",k^2, -1*(((k-(supersamplingSize/2))^2)/(2*0.16)), colorWeightk);
+		 		supersampledColor.R += col.R*colorWeight;
+		 		supersampledColor.G += col.G*colorWeight;
+		 		supersampledColor.B += col.B*colorWeight; 
+		 	}
+		}
+		col.R = supersampledColor.R/(supersamplingSize*supersamplingSize);
+		col.G = supersampledColor.G/(supersamplingSize*supersamplingSize);
+		col.B = supersampledColor.B/(supersamplingSize*supersamplingSize);
+		//printf("%f, %f, %f\n", col.R, col.G, col.B);
+		 //Paint the RGB
  		*rgbIm  = col.R;
  		rgbIm++;
  		*rgbIm  = col.G;
@@ -568,8 +604,10 @@ int main(int argc, char *argv[])
  
   	} // end for i
  } // end for j
-
-
+ 
+ free(origin);
+ free(imagePlane);
+ free(direction);
 
  fprintf(stderr,"%d, ", intersect_count);
  fprintf(stderr,"\nDone!\n");
