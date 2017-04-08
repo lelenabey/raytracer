@@ -581,10 +581,10 @@ int main(int argc, char *argv[])
 				//ray = newRay(&pc, &d);
 		 		rayTrace(ray, 0, &col, NULL);
 				//weight the color using a gaussian
-				//double colorWeightk = (1/(0.5*sqrt(2*PI))) * exp(-1*(pow((k-(supersamplingSize/2)),2))/(2*0.25));
-				//double colorWeightl = (1/(0.5*sqrt(2*PI))) * exp(-1*(pow((l-(supersamplingSize/2)),2))/(2*0.25));
+				//double colorWeightk = (1/(0.5*sqrt(2*PI))) * exp(-1*(pow((k-((supersamplingSize-1)/2)),2))/(2*0.25));
+				//double colorWeightl = (1/(0.5*sqrt(2*PI))) * exp(-1*(pow((l-((supersamplingSize-1)/2)),2))/(2*0.25));
 				double colorWeight = 1;//(-1*(max(-1*colorWeightk, -1*colorWeightl)));
-				//printf("d: %d, p:%f, result: %f\n",k^2, -1*(((k-(supersamplingSize/2))^2)/(2*0.16)), colorWeightk);
+				//printf("d: %f, p:%f, result: %f\n",pow(k,2), -1*(pow((k-(supersamplingSize/2)),2))/(2*0.25), colorWeightk);
 		 		supersampledColor.R += col.R*colorWeight;
 		 		supersampledColor.G += col.G*colorWeight;
 		 		supersampledColor.B += col.B*colorWeight; 
