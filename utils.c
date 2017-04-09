@@ -183,6 +183,46 @@ struct object3D *newSphere(double ra, double rd, double rs, double rg, double r,
  return(sphere);
 }
 
+struct object3D *newCylinder(double ra, double rd, double rs, double rg, double r, double g, double b, double alpha, double r_index, double shiny)
+{
+ // Intialize a new sphere with the specified parameters:
+ // ra, rd, rs, rg - Albedos for the components of the Phong model
+ // r, g, b, - Colour for this plane
+ // alpha - Transparency, must be set to 1 unless you are doing refraction
+ // r_index - Refraction index if you are doing refraction.
+ // shiny -Exponent for the specular component of the Phong model
+ //
+ // This is assumed to represent a unit sphere centered at the origin.
+ //
+
+ struct object3D *cylinder=(struct object3D *)calloc(1,sizeof(struct object3D));
+
+ if (!cylinder) fprintf(stderr,"Unable to allocate new sphere, out of memory!\n");
+ else
+ {
+  cylinder->alb.ra=ra;
+  cylinder->alb.rd=rd;
+  cylinder->alb.rs=rs;
+  cylinder->alb.rg=rg;
+  cylinder->col.R=r;
+  cylinder->col.G=g;
+  cylinder->col.B=b;
+  cylinder->alpha=alpha;
+  cylinder->r_index=r_index;
+  cylinder->shinyness=shiny;
+  cylinder->intersect=&cylinderIntersect;
+  cylinder->texImg=NULL;
+  memcpy(&cylinder->T[0][0],&eye4x4[0][0],16*sizeof(double));
+  memcpy(&cylinder->Tinv[0][0],&eye4x4[0][0],16*sizeof(double));
+  cylinder->textureMap=&texMap;
+  cylinder->frontAndBack=0;
+  cylinder->isLightSource=0;
+ }
+ return(cylinder);
+}
+
+
+
 ///////////////////////////////////////////////////////////////////////////////////////
 // TO DO:
 //	Complete the functions that compute intersections for the canonical plane
@@ -291,6 +331,82 @@ void sphereIntersect(struct object3D *sphere, struct ray3D *ray, double *lambda,
  free(origin);
  free(tn);
 }
+
+void cylinderIntersect(struct object3D *cylinder, struct ray3D *ray, double *lambda, struct point3D *p, struct point3D *n, double *a, double *b)
+{
+ // Computes and returns the value of 'lambda' at the intersection
+ // between the specified ray and the specified canonical sphere.
+
+ /////////////////////////////////
+ // TO DO: Complete this function.
+ /////////////////////////////////
+ struct ray3D * origin;
+ struct point3D *tn, *new_ray_d, *new_ray_p;
+ new_ray_d = newPoint(0 ,0 ,0);
+ new_ray_p = newPoint(0, 0, 0);
+ new_ray_p->pw = 1;
+ new_ray_d->pw = 0;
+ origin = newRay(new_ray_p, new_ray_d);
+ rayTransform(ray, origin, cylinder);
+ *lambda = -1;
+
+ double t, t1, t2, A, B, C, z1, z2;
+ double p0_z = origin->p0.pz;
+ double d_z = origin->d.pz;
+ origin->p0.pz = 0;
+ origin->d.pz = 0;
+ A=dot(&origin->d, &origin->d);
+ B = 2* dot(&origin->d, &origin->p0);
+ C = dot(&origin->p0, &origin->p0) -1;
+ if(B*B - 4 *A*C < 0){
+  free(new_ray_d);
+ free(new_ray_p);
+ free(origin);
+  return;
+ }
+ t1 = (-B - sqrt(B*B - 4 *A*C))/(2*A);
+ t2 = (-B + sqrt(B*B - 4 *A*C))/(2*A);
+
+
+ z1 = p0_z +(t1*d_z);
+ z2 = p0_z +(t2*d_z);
+ t = -1;
+/*
+ if(1 < t2 && t1 > 0){
+   t = t1;
+ }
+ else{
+   t = t2;
+ }
+*/
+
+ if(z1 <= 1 && z1 >= 0){
+  t = z1;	
+ }
+ if(z2 <= 1 && z2 >= 0 && z2 > t){
+  t = z2;
+ } 
+ if (t <= 0){
+  free(new_ray_d);
+  free(new_ray_p);
+  free(origin);
+  return;
+ }
+  
+ rayPosition(origin, t, p);
+
+ tn = newPoint(-p->px, -p->py, -p->pz);
+
+ *lambda = t;
+ normalTransform(tn, n, cylinder);
+ matVecMult(cylinder->T, p);
+ 
+ free(new_ray_d);
+ free(new_ray_p);
+ free(origin);
+ free(tn);
+}
+
 
 void loadTexture(struct object3D *o, const char *filename)
 {

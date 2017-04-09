@@ -91,11 +91,18 @@ void buildScene(void)
  Translate(o,-1.45,1.1,3.5);
  invert(&o->T[0][0],&o->Tinv[0][0]);
  insertObject(o,&object_list);
-
+/*
  o=newSphere(.05,.95,.95,.75,.75,.95,.55,1,1,6);
  Scale(o,.5,2.0,1.0);
  RotateZ(o,PI/1.5);
  Translate(o,1.75,1.25,5.0);
+ invert(&o->T[0][0],&o->Tinv[0][0]);
+ insertObject(o,&object_list);
+*/
+ o=newCylinder(.05,.95,.95,.75,.75,.95,.55,1,1,6);
+ Scale(o,.75,.75,4);
+ //RotateX(o,PI/2);
+ Translate(o,3,3,15);
  invert(&o->T[0][0],&o->Tinv[0][0]);
  insertObject(o,&object_list);
 
@@ -106,8 +113,8 @@ void buildScene(void)
  // p.pw=1;
  // l=newPLS(&p,.95,.95,.95);
  // insertPLS(l,&light_list);
-addAreaLight(3, 3, 0, 0, 5.5,\
-                  0, 15.5, -5.5, 9, 9,\
+ addAreaLight(3, 3, 0, 0, 5.5,\
+                  0, 15.5, -5.5, 3, 3,\
                   255, 255, 255, &object_list, &light_list);
 
 
@@ -572,10 +579,13 @@ int main(int argc, char *argv[])
 				ray = newRay(origin, direction);
 				//ray = newRay(&pc, &d);
 				rayTrace(ray, 0, &col, NULL);
-				//weight the color using a gaussian
-				double gaussianScale = 2;
-			   	double colorWeight = (1/(0.4*2*PI)) * exp(-1*(pow((l-((supersamplingSize-1)/2)/gaussianScale),2) + pow((k-((supersamplingSize-1)/2)/gaussianScale),2))/(2*0.4));
-				//printf("d: %f, p:%f, result: %f\n",pow(k,2), -1*(pow((k-(supersamplingSize/2)),2))/(2*0.25), colorWeightk);
+				double colorWeight = 1;
+  				if(antialiasing){
+					//weight the color using a gaussian
+					double gaussianScale = 2;
+			   		colorWeight = (1/(0.4*2*PI)) * exp(-1*(pow((l-((supersamplingSize-1)/2)/gaussianScale),2) + pow((k-((supersamplingSize-1)/2)/gaussianScale),2))/(2*0.4));
+					//printf("d: %f, p:%f, result: %f\n",pow(k,2), -1*(pow((k-(supersamplingSize/2)),2))/(2*0.25), colorWeightk);
+				}
 				supersampledColor.R += col.R*colorWeight;
 				supersampledColor.G += col.G*colorWeight;
 				supersampledColor.B += col.B*colorWeight; 
