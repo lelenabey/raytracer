@@ -228,6 +228,10 @@ void rtShade(struct object3D *obj, struct point3D *p, struct point3D *n, struct 
 	 //printf("NL : %f\n", L->py);
 	 VR = max(0, pow(dot(V, r), obj->shinyness));
 	 //printf("VR %f\n", dot(V, r));
+	 free(L);
+	 free(N);
+	 free(V);
+	 free(r);
 
 	 double amb = obj->alb.ra;
 	 double diff = obj->alb.rd * NL;
@@ -272,10 +276,7 @@ void rtShade(struct object3D *obj, struct point3D *p, struct point3D *n, struct 
 	 col->G = max(0, -1*max(-255, -col->G));
 	 col->B = max(0, -1*max(-255, -col->B));
 
-     free(L);
-	 free(N);
-	 free(V);
-	 free(r);
+     
  //fprintf(stderr,"r g b:  %f  %f\n",obj->col.R,obj->col.G);
 
  // Be sure to update 'col' with the final colour computed here!
@@ -579,6 +580,7 @@ int main(int argc, char *argv[])
 				supersampledColor.R += col.R*colorWeight;
 				supersampledColor.G += col.G*colorWeight;
 				supersampledColor.B += col.B*colorWeight; 
+				free(ray);
 				free(direction);
 			}
 		}

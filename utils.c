@@ -100,6 +100,7 @@ inline void normalTransform(struct point3D *n_orig, struct point3D *n_transforme
  normalize(n_transformed);
 
  matVecMult(C, n_transformed);
+
 }
 
 /////////////////////////////////////////////
@@ -443,10 +444,11 @@ void addAreaLight(float sx, float sy, float nx, float ny, float nz,\
   forward->pw=0;
 
   normalize(up);
-  right = newPoint(forward->px, forward->py, forward->pz);
-  right->pw = 0;
+  // right = newPoint(forward->px, forward->py, forward->pz);
+  // right->pw = 0;
 
   right = cross(up, forward);   
+  free(forward);
   forward = cross(right, up);    
 
   rotation[0][0]=right->px;
