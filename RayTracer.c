@@ -107,7 +107,7 @@ void buildScene(void)
  // l=newPLS(&p,.95,.95,.95);
  // insertPLS(l,&light_list);
 addAreaLight(3, 3, 0, 0, 5.5,\
-                  0, 15.5, -5.5, 3, 3,\
+                  0, 15.5, -5.5, 9, 9,\
                   255, 255, 255, &object_list, &light_list);
 
 
@@ -573,9 +573,8 @@ int main(int argc, char *argv[])
 				//ray = newRay(&pc, &d);
 				rayTrace(ray, 0, &col, NULL);
 				//weight the color using a gaussian
-				//double colorWeightk = (1/(0.5*sqrt(2*PI))) * exp(-1*(pow((k-((supersamplingSize-1)/2)),2))/(2*0.25));
-				//double colorWeightl = (1/(0.5*sqrt(2*PI))) * exp(-1*(pow((l-((supersamplingSize-1)/2)),2))/(2*0.25));
-				double colorWeight = 1;//(-1*(max(-1*colorWeightk, -1*colorWeightl)));
+				double gaussianScale = 2;
+			   	double colorWeight = (1/(0.4*2*PI)) * exp(-1*(pow((l-((supersamplingSize-1)/2)/gaussianScale),2) + pow((k-((supersamplingSize-1)/2)/gaussianScale),2))/(2*0.4));
 				//printf("d: %f, p:%f, result: %f\n",pow(k,2), -1*(pow((k-(supersamplingSize/2)),2))/(2*0.25), colorWeightk);
 				supersampledColor.R += col.R*colorWeight;
 				supersampledColor.G += col.G*colorWeight;
@@ -584,9 +583,12 @@ int main(int argc, char *argv[])
 				free(direction);
 			}
 		}
-		col.R = supersampledColor.R/(supersamplingSize*supersamplingSize);
-		col.G = supersampledColor.G/(supersamplingSize*supersamplingSize);
-		col.B = supersampledColor.B/(supersamplingSize*supersamplingSize);
+		col.R = supersampledColor.R;
+		col.G = supersampledColor.G;
+		col.B = supersampledColor.B;
+		col.R = max(0, -1*max(-255, -col.R));
+ 		col.G = max(0, -1*max(-255, -col.G));
+ 		col.B = max(0, -1*max(-255, -col.B));
 		//printf("%f, %f, %f\n", col.R, col.G, col.B);
 		 //Paint the RGB
 		*rgbIm  = col.R;
