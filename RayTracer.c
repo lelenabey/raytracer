@@ -100,12 +100,16 @@ void buildScene(void)
  insertObject(o,&object_list);
 
  // Insert a single point light source.
- p.px=0;
- p.py=15.5;
- p.pz=-5.5;
- p.pw=1;
- l=newPLS(&p,.95,.95,.95);
- insertPLS(l,&light_list);
+ // p.px=0;
+ // p.py=15.5;
+ // p.pz=-5.5;
+ // p.pw=1;
+ // l=newPLS(&p,.95,.95,.95);
+ // insertPLS(l,&light_list);
+addAreaLight(3, 3, 0, 0, 5.5,\
+                  0, 15.5, -5.5, 3, 3,\
+                  255, 255, 255, &object_list, &light_list);
+
 
  // End of simple scene for Assignment 3
  // Keep in mind that you can define new types of objects such as cylinders and parametric surfaces,
@@ -162,137 +166,115 @@ void rtShade(struct object3D *obj, struct point3D *p, struct point3D *n, struct 
 
 
  double NL, LN, VR; // variables used for phong
-
+ struct point3D *L, *N, *V, *r;
+	 
  struct pointLS *light = light_list;
 
- struct point3D *light_dir = newPoint(p->px - light->p0.px, p->py - light->p0.py, p->pz - light->p0.pz); // calculating and assinging light ray
- struct point3D *shadow_dir = newPoint(light->p0.px - p->px, light->p0.py - p->py, light->p0.pz - p->pz); // calculating and assinging light ray
+ while(light){
 
- 
- light_dir->pw = 0;
- shadow_dir->pw = 0;
+	 struct point3D *light_dir = newPoint(p->px - light->p0.px, p->py - light->p0.py, p->pz - light->p0.pz); // calculating and assinging light ray
+	 struct point3D *shadow_dir = newPoint(light->p0.px - p->px, light->p0.py - p->py, light->p0.pz - p->pz); // calculating and assinging light ray
 
- struct ray3D *light_ray = newRay(&(light->p0), light_dir);
- struct ray3D *shadow_ray = newRay(p, shadow_dir);
- 
- struct object3D *light_obj = NULL;
- double tlambda = -1; // temp variables
- struct point3D tp;
- struct point3D tn;
- double ta = 0;
- //printf("returned: %f, %f, %f\n", light->p0.px, light->p0.py, light->p0.pz);
- //printf("returned: %f, %f, %f\n", light_dir->px, light_dir->py, light_dir->pz);
+	 
+	 light_dir->pw = 0;
+	 shadow_dir->pw = 0;
 
- findFirstHit(shadow_ray, &tlambda, obj, &light_obj, &tp, &tn, &ta, &b);
- //printf("returned: %f, %f, %f, %f\n", p->px, p->py, p->pz, tlambda);
- if(light_obj != NULL){
-  //printf("diff: %f, %f", light_obj->col.R, obj->col.R);
-  //printf("diff: %f, %f", obj->col.R, obj->col.G);
-  //printf("returned: %f, %f, %f, %f\n", p->px, p->py, p->pz, tlambda);
-  col->R = 0;
-  col->G = 0;
-  col->B = 0;
+	 struct ray3D *light_ray = newRay(&(light->p0), light_dir);
+	 struct ray3D *shadow_ray = newRay(p, shadow_dir);
+	 
+	 struct object3D *light_obj = NULL;
+	 double tlambda = -1; // temp variables
+	 struct point3D tp;
+	 struct point3D tn;
+	 double ta = 0;
+	 //printf("returned: %f, %f, %f\n", light->p0.px, light->p0.py, light->p0.pz);
+	 //printf("returned: %f, %f, %f\n", light_dir->px, light_dir->py, light_dir->pz);
 
-  return;
- }
- //findFirstHit(light_ray, &tlambda, obj, &light_obj, p, n, &a, &b);
- 	// printf("shadow");
- 	// printf("%f, %f, %f\n", shadow_dir->px, shadow_dir->py, shadow_dir->pz);
- 	// printf("light");
- 	// printf("%f, %f, %f\n", light_dir->px, light_dir->py, light_dir->pz);
- //printf("%f", tlambda);
- //printf("objects %f, %f\n", obj, light_obj);
- // if(tlambda != -1){
- 	
- // 	col->R = 0;
- // 	col->G = 150;
- // 	col->B = 150;
+	 findFirstHit(shadow_ray, &tlambda, obj, &light_obj, &tp, &tn, &ta, &b);
+	 //printf("returned: %f, %f, %f, %f\n", p->px, p->py, p->pz, tlambda);
+	 if(tlambda > 0 && tlambda < 1){
+	 
+	 	tmp_col.R = 0;
+	 	tmp_col.G = 0;
+	 	tmp_col.B = 0;
 
- //    return;	    
- // }
+	 }
 
 
- //phong
- struct point3D *L = newPoint(light_ray->d.px, light_ray->d.py, light_ray->d.pz);
- struct point3D *N = newPoint(n->px, n->py, n->pz);
- struct point3D *V = newPoint(-ray->d.px, -ray->d.py, -ray->d.pz);
- L->pw = 0;
- N->pw = 0;
- V->pw= 0;
- normalize(L);
- //normalize(N);
- normalize(V);
+	 //phong
+	 L = newPoint(light_ray->d.px, light_ray->d.py, light_ray->d.pz);
+	 N = newPoint(n->px, n->py, n->pz);
+	 V = newPoint(-ray->d.px, -ray->d.py, -ray->d.pz);
+	 L->pw = 0;
+	 N->pw = 0;
+	 V->pw= 0;
+	 normalize(L);
+	 //normalize(N);
+	 normalize(V);
 
- LN = dot(L, N);
+	 LN = dot(L, N);
 
- struct point3D *r = newPoint(2*LN*N->px - L->px, 2*LN*N->py - L->py, 2*LN*N->pz - L->pz);
- r->pw = 0;
- 
- normalize(r);
+	 r = newPoint(2*LN*N->px - L->px, 2*LN*N->py - L->py, 2*LN*N->pz - L->pz);
+	 r->pw = 0;
+	 
+	 normalize(r);
 
- NL = max(0, dot(N, L));
- //printf("NL : %f\n", L->py);
- VR = max(0, pow(dot(V, r), obj->shinyness));
- //printf("VR %f\n", dot(V, r));
+	 NL = max(0, dot(N, L));
+	 //printf("NL : %f\n", L->py);
+	 VR = max(0, pow(dot(V, r), obj->shinyness));
+	 //printf("VR %f\n", dot(V, r));
 
- double amb = obj->alb.ra;
- double diff = obj->alb.rd * NL;
- double spec = obj->alb.rs * VR;
- 
- //Only multiply obj color by amb and diff, raytrace tut part2 slide 5.
- tmp_col.R = (R*(amb + diff) + spec)*light->col.R*200;
- tmp_col.G = (G*(amb + diff) + spec)*light->col.G*200;
- tmp_col.B = (B*(amb + diff) + spec)*light->col.B*200;
+	 double amb = obj->alb.ra;
+	 double diff = obj->alb.rd * NL;
+	 double spec = obj->alb.rs * VR;
+	 
+	 //Only multiply obj color by amb and diff, raytrace tut part2 slide 5.
+	 tmp_col.R += (R*(amb + diff) + spec)*light->col.R;
+	 tmp_col.G += (G*(amb + diff) + spec)*light->col.G;
+	 tmp_col.B += (B*(amb + diff) + spec)*light->col.B;
 
- // make sure that the colors are bound by [0, 255]
+	 // make sure that the colors are bound by [0, 255]
 
- col->R += tmp_col.R;
- col->G += tmp_col.G;
- col->B += tmp_col.B;
+	 light = light->next;
+	}
 
-//printf("Depth : %i\n", depth);
+	 col->R = tmp_col.R;
+	 col->G = tmp_col.G;
+	 col->B = tmp_col.B;
 
-
- if (depth < MAX_DEPTH){
-    struct point3D *reflect_p = p;
-    
-    double dn = dot(&(ray->d), n);
-
-    struct point3D *reflect_d = newPoint(ray->d.px - 2*dn*n->px, ray->d.py - 2*dn*n->py, ray->d.pz - 2*dn*n->pz);
-    reflect_d->pw = 0;
-    //printf("returned: %f, %f, %f, %f\n", reflect_d->px, reflect_d->py, reflect_d->pz, reflect_d->pw);
-    //normalize(reflect_d);
-    struct ray3D * reflected = newRay(reflect_p, reflect_d);
-    rayTrace(reflected, depth+1, col, obj);
-
-    //free(reflect_p);
-    free(reflect_d);
-    free(reflected);
-
- }
- 
- col->R = max(0, -1*max(-255, -col->R));
- col->G = max(0, -1*max(-255, -col->G));
- col->B = max(0, -1*max(-255, -col->B));
+	//printf("Depth : %i\n", depth);
 
 
-//printf("R %f, %f, %f\n", obj->alb.ra ,(obj->alb.rd * NL), (obj->alb.rs * VR));
- //printf("%f, %f, %f\n", col->R, col->G, col->B);
- //printf("%f, %f, %f\n", N->px, N->py, N->pz);
- //printf("%f, %f, %f\n", L->px, L->py, L->pz);
- //printf("%f, %f, %f\n", V->px, V->py, V->pz); 
+	 if (depth < MAX_DEPTH){
+	 	struct point3D *reflect_p = p;
 
- free(L);
- free(N);
- free(V);
- free(r);
+	 	double dn = dot(&(ray->d), n);
 
+	 	struct point3D *reflect_d = newPoint(ray->d.px - 2*dn*n->px, ray->d.py - 2*dn*n->py, ray->d.pz - 2*dn*n->pz);
+	 	reflect_d->pw = 0;
+	    //printf("returned: %f, %f, %f, %f\n", reflect_d->px, reflect_d->py, reflect_d->pz, reflect_d->pw);
+	    //normalize(reflect_d);
+	 	struct ray3D * reflected = newRay(reflect_p, reflect_d);
+	 	rayTrace(reflected, depth+1, col, obj);
 
+	    //free(reflect_p);
+	 	free(reflect_d);
+	 	free(reflected);
 
+	 }
+
+	 col->R = max(0, -1*max(-255, -col->R));
+	 col->G = max(0, -1*max(-255, -col->G));
+	 col->B = max(0, -1*max(-255, -col->B));
+
+     free(L);
+	 free(N);
+	 free(V);
+	 free(r);
  //fprintf(stderr,"r g b:  %f  %f\n",obj->col.R,obj->col.G);
 
  // Be sure to update 'col' with the final colour computed here!
- return;
+	return;
 
 }
 
@@ -329,12 +311,12 @@ void findFirstHit(struct ray3D *ray, double *lambda, struct object3D *Os, struct
  		// 	if(*a == 3 && tlambda >= 0){
 			// 	printf("returned: %f\n", tlambda);
 			// } 
-   			if(tlambda >= 0 && (*lambda == -1 || tlambda < *lambda)){
+			if(tlambda >= 0 && (*lambda == -1 || tlambda < *lambda)){
 				intersect_count += 1;
 				*obj = walker;
 				*lambda = tlambda;
 				*p = tp;
- 				*n = tn;
+				*n = tn;
 				//printf("returned: %f, %f, %f, %f\n", tn.px, tn.py, tn.pz, tlambda);
 				//n = newPoint(tn.px, tn.py, tn.pz);
                        		//printf("returned: %f, %f, %f, %f\n", p->px, p->py, p->pz, tlambda);
@@ -531,6 +513,7 @@ int main(int argc, char *argv[])
  struct point3D * direction;
  //set to 1 if you want no anti-aliasing
  int supersamplingSize = 4;
+ if(!antialiasing) supersamplingSize = 1;
  fprintf(stderr,"Rendering row: ");
  for (j=0;j<sx;j++)		// For each of the pixels in the image
  {
@@ -557,51 +540,51 @@ int main(int argc, char *argv[])
 			{
 				double dx = (0.5 + (1.0*k))/supersamplingSize;
 				double dy = (0.5 + (1.0*l))/supersamplingSize;
-		 		imagePlane->px = (cam->wl) + (i + dx)*du;
-		 		imagePlane->py = (cam->wt) + (j + dy)*dv;
-		 		imagePlane->pz = cam->f;
+				imagePlane->px = (cam->wl) + (i + dx)*du;
+				imagePlane->py = (cam->wt) + (j + dy)*dv;
+				imagePlane->pz = cam->f;
  				/*d.px = (cam->wl) + (i + dx)*du;
                                 d.py = (cam->wt) + (j + dy)*dv;
                                 d.pz = cam->f;
 			        d.pw = 0;*/ 
 		                //fprintf(stderr,"(%d, %d): %f/%f, \n",l, k, d.px, d.py);
 		 		//Ray Direction 
-		 		direction = newPoint(imagePlane->px, imagePlane->py, imagePlane->pz); 	
+				direction = newPoint(imagePlane->px, imagePlane->py, imagePlane->pz); 	
 				subVectors(origin, direction);
 				//fprintf(stderr,"(%d, %d): %f/%f, \n",1, 1, d.px, d.py);
-		 		direction->pw = 0;
+				direction->pw = 0;
 			    	//Convert to world-space
-		 		matVecMult(cam->C2W, direction);
-		 		matVecMult(cam->C2W, origin);
+				matVecMult(cam->C2W, direction);
+				matVecMult(cam->C2W, origin);
 				//matVecMult(cam->C2W, &d);
                                 //matVecMult(cam->C2W, &pc);
-		 		direction->pw = 0;
+				direction->pw = 0;
 				d.pw = 0;
-		 		ray = newRay(origin, direction);
+				ray = newRay(origin, direction);
 				//ray = newRay(&pc, &d);
-		 		rayTrace(ray, 0, &col, NULL);
+				rayTrace(ray, 0, &col, NULL);
 				//weight the color using a gaussian
 				//double colorWeightk = (1/(0.5*sqrt(2*PI))) * exp(-1*(pow((k-((supersamplingSize-1)/2)),2))/(2*0.25));
 				//double colorWeightl = (1/(0.5*sqrt(2*PI))) * exp(-1*(pow((l-((supersamplingSize-1)/2)),2))/(2*0.25));
 				double colorWeight = 1;//(-1*(max(-1*colorWeightk, -1*colorWeightl)));
 				//printf("d: %f, p:%f, result: %f\n",pow(k,2), -1*(pow((k-(supersamplingSize/2)),2))/(2*0.25), colorWeightk);
-		 		supersampledColor.R += col.R*colorWeight;
-		 		supersampledColor.G += col.G*colorWeight;
-		 		supersampledColor.B += col.B*colorWeight; 
-		 	}
+				supersampledColor.R += col.R*colorWeight;
+				supersampledColor.G += col.G*colorWeight;
+				supersampledColor.B += col.B*colorWeight; 
+			}
 		}
 		col.R = supersampledColor.R/(supersamplingSize*supersamplingSize);
 		col.G = supersampledColor.G/(supersamplingSize*supersamplingSize);
 		col.B = supersampledColor.B/(supersamplingSize*supersamplingSize);
 		//printf("%f, %f, %f\n", col.R, col.G, col.B);
 		 //Paint the RGB
- 		*rgbIm  = col.R;
- 		rgbIm++;
- 		*rgbIm  = col.G;
- 		rgbIm++;
- 		*rgbIm  = col.B;
- 		rgbIm++;
- 
+		*rgbIm  = col.R;
+		rgbIm++;
+		*rgbIm  = col.G;
+		rgbIm++;
+		*rgbIm  = col.B;
+		rgbIm++;
+
   	} // end for i
  } // end for j
  

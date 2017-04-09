@@ -208,7 +208,7 @@ void planeIntersect(struct object3D *plane, struct ray3D *ray, double *lambda, s
  /*if(*a == 3){
   fprintf(stderr,"%f/%f, \n",(-origin->p0.pz), origin->d.pz);
  }*/
- if(origin->d.pz == 0){
+ if(origin->d.pz == 0 || plane->isLightSource ==1){
   return;
  }
  double t = (-origin->p0.pz) / origin->d.pz;
@@ -230,14 +230,13 @@ void planeIntersect(struct object3D *plane, struct ray3D *ray, double *lambda, s
  //tn->pw = 0;
  //memcpy(lambda, &t, sizeof(double)); 
  if(p->px >= -1 && p->px <= 1 && p->py >= -1 && p->py <= 1){
-  if(*a == 3){ 
-  	fprintf(stderr,"plane normal: %f/%f/%f,\n",n->px,n->py, n->pz);
-  } 
   *lambda = t;
   normalTransform(tn, n, plane); 
   matVecMult(plane->T, p);
   //fprintf(stderr,"plane normal: %f/%f/%f,\n",n->px,n->py, n->pz);
  }
+ 
+ 
 }
 
 void sphereIntersect(struct object3D *sphere, struct ray3D *ray, double *lambda, struct point3D *p, struct point3D *n, double *a, double *b)
@@ -407,7 +406,86 @@ void addAreaLight(float sx, float sy, float nx, float ny, float nz,\
   // TO DO: (Assignment 4!)
   // Implement this function to enable area light sources
   /////////////////////////////////////////////////////
+  struct object3D *o;
+  struct point3D *up, *forward, *right, p;
+  struct pointLS *l;
+  double rotation[4][4];  //rotation matrix
+  double spacex, spacey;
 
+  up = newPoint(nx, ny, nz);
+  up->pw = 0;
+
+  if (up->px == 0){
+    forward = newPoint(1, 0, 0);
+  }
+  else{
+    forward = newPoint(0, 1, 0);
+  }
+  forward->pw=0;
+
+  normalize(up);
+  right = newPoint(forward->px, forward->py, forward->pz);
+  right->pw = 0;
+
+  right = cross(up, forward);   
+  forward = cross(right, up);    
+
+  rotation[0][0]=right->px;
+  rotation[1][0]=right->py;
+  rotation[2][0]=right->pz;
+  rotation[3][0]=0;
+
+  rotation[0][1]=forward->px;
+  rotation[1][1]=forward->py;
+  rotation[2][1]=forward->pz;
+  rotation[3][1]=0;
+
+  rotation[0][2]=up->px;
+  rotation[1][2]=up->py;
+  rotation[2][2]=up->pz;
+  rotation[3][2]=0;
+
+  rotation[0][3]=0;
+  rotation[1][3]=0;
+  rotation[2][3]=0;
+  rotation[3][3]=1;
+
+  free(forward);
+  free(right);
+  free(up);
+
+  o=newPlane(.05,0,0,.05,1,1,1,1,1,0); // Note the plane is highly-reflective (rs=rg=.75) so we
+            // ra, rd, rs, rg - Albedos for the components of the Phong model
+ // r, g, b, - Colour for this plane
+ // alpha - Transparency, must be set to 1 unless you are doing refraction
+ // r_index - Refraction index if you are doing refraction.
+ // shiny - Exponent for the specular component of the Phong model
+  o->isLightSource = 1;
+  Scale(o,sx,sy,1);        // Do a few transforms...
+  matMult(rotation, o->T);
+  Translate(o,tx+sx,ty+sy,tz);
+  invert(&o->T[0][0],&o->Tinv[0][0]);    // Very important! compute
+            // and store the inverse
+            // transform for this object!
+
+  insertObject(o,o_list);      // Insert into object list
+
+  spacex = 1.0/(lx-1);
+  spacey = 1.0/(ly-1);
+
+  int j, i;
+
+  for (j=0; j<ly; j++) {
+      for (i=0; i<lx; i++) {
+        p.px = i*spacex;
+        p.py = j*spacey;
+        p.pz = 0;
+        p.pw = 1;
+        matVecMult(o->T, &p);
+        l = newPLS(&p, r/(lx*ly), g/(lx*ly), b/(lx*ly));
+        insertPLS(l, l_list);
+      }
+    }
 }
 
 ///////////////////////////////////
