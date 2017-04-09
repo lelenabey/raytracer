@@ -209,11 +209,17 @@ void planeIntersect(struct object3D *plane, struct ray3D *ray, double *lambda, s
   fprintf(stderr,"%f/%f, \n",(-origin->p0.pz), origin->d.pz);
  }*/
  if(origin->d.pz == 0 || plane->isLightSource ==1){
+  free(new_ray_d);
+ free(new_ray_p);
+ free(origin);
   return;
  }
  double t = (-origin->p0.pz) / origin->d.pz;
  if(t < 0 || origin->d.pz == 0){
   //*lambda = -1;
+  free(new_ray_d);
+ free(new_ray_p);
+ free(origin);
   return;
  }
  // p->px = t*origin->d.px;
@@ -235,8 +241,11 @@ void planeIntersect(struct object3D *plane, struct ray3D *ray, double *lambda, s
   matVecMult(plane->T, p);
   //fprintf(stderr,"plane normal: %f/%f/%f,\n",n->px,n->py, n->pz);
  }
- 
- 
+ free(new_ray_d);
+ free(new_ray_p);
+ free(origin);
+ free(tn);
+
 }
 
 void sphereIntersect(struct object3D *sphere, struct ray3D *ray, double *lambda, struct point3D *p, struct point3D *n, double *a, double *b)
@@ -263,6 +272,9 @@ void sphereIntersect(struct object3D *sphere, struct ray3D *ray, double *lambda,
  B = 2* dot(&origin->d, &origin->p0);
  C = dot(&origin->p0, &origin->p0) -1;
  if(B*B - 4 *A*C < 0){
+  free(new_ray_d);
+ free(new_ray_p);
+ free(origin);
   return;
  }
  t1 = (-B - sqrt(B*B - 4 *A*C))/(2*A);
@@ -278,6 +290,9 @@ else{
 }
 
 if (t <= 0){
+  free(new_ray_d);
+ free(new_ray_p);
+ free(origin);
   return;
 }
  // p->px = t*origin->d.px;
@@ -305,6 +320,10 @@ normalTransform(tn, n, sphere);
 //fprintf(stdout,"sphere normal: %f/%f/%f,\n",p->px,p->py, p->pz);
 matVecMult(sphere->T, p);
 
+free(new_ray_d);
+ free(new_ray_p);
+ free(origin);
+free(tn);
 }
 
 void loadTexture(struct object3D *o, const char *filename)

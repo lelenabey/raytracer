@@ -191,6 +191,8 @@ void rtShade(struct object3D *obj, struct point3D *p, struct point3D *n, struct 
 	 //printf("returned: %f, %f, %f\n", light_dir->px, light_dir->py, light_dir->pz);
 
 	 findFirstHit(shadow_ray, &tlambda, obj, &light_obj, &tp, &tn, &ta, &b);
+	 free(shadow_dir);
+	 free(shadow_ray);
 	 //printf("returned: %f, %f, %f, %f\n", p->px, p->py, p->pz, tlambda);
 	 if(tlambda > 0 && tlambda < 1){
 	 
@@ -205,6 +207,9 @@ void rtShade(struct object3D *obj, struct point3D *p, struct point3D *n, struct 
 	 L = newPoint(light_ray->d.px, light_ray->d.py, light_ray->d.pz);
 	 N = newPoint(n->px, n->py, n->pz);
 	 V = newPoint(-ray->d.px, -ray->d.py, -ray->d.pz);
+
+	 free(light_dir);
+	 free(light_ray);
 	 L->pw = 0;
 	 N->pw = 0;
 	 V->pw= 0;
@@ -365,6 +370,9 @@ void rayTrace(struct ray3D *ray, int depth, struct colourRGB *col, struct object
   //intersect_count += 1;
  	rtShade(obj, &p, &n, ray, depth, a, b, col);
  }
+
+ //free(obj);
+
 }
 
 int main(int argc, char *argv[])
@@ -571,6 +579,7 @@ int main(int argc, char *argv[])
 				supersampledColor.R += col.R*colorWeight;
 				supersampledColor.G += col.G*colorWeight;
 				supersampledColor.B += col.B*colorWeight; 
+				free(direction);
 			}
 		}
 		col.R = supersampledColor.R/(supersamplingSize*supersamplingSize);
@@ -584,13 +593,14 @@ int main(int argc, char *argv[])
 		rgbIm++;
 		*rgbIm  = col.B;
 		rgbIm++;
+		free(origin);
+ 		free(imagePlane);
 
   	} // end for i
  } // end for j
  
- free(origin);
- free(imagePlane);
- free(direction);
+ 
+ 
 
  fprintf(stderr,"%d, ", intersect_count);
  fprintf(stderr,"\nDone!\n");
