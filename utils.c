@@ -253,7 +253,7 @@ void planeIntersect(struct object3D *plane, struct ray3D *ray, double *lambda, s
  }
  double t = (-origin->p0.pz) / origin->d.pz;
  if(t < 0 || origin->d.pz == 0){
-   free(new_ray_d);
+ free(new_ray_d);
  free(new_ray_p);
  free(origin);
   return;
@@ -261,7 +261,14 @@ void planeIntersect(struct object3D *plane, struct ray3D *ray, double *lambda, s
 
  rayPosition(origin, t, p);
  tn = newPoint(0, 0, 1); 
+
+ if (plane->texImg != NULL){
+      *a = max(0, -1*max(-1, -(p->px+1)/2));
+      *b = max(0, -1*max(-1, -(p->py+1)/2));
+    }
+
  if(p->px >= -1 && p->px <= 1 && p->py >= -1 && p->py <= 1){
+
   *lambda = t;
   normalTransform(tn, n, plane); 
   matVecMult(plane->T, p);
@@ -425,6 +432,7 @@ void loadTexture(struct object3D *o, const char *filename)
    free(o->texImg);
   }
   o->texImg=readPPMimage(filename);	// Allocate new texture
+
  }
 }
 
@@ -450,10 +458,24 @@ void texMap(struct image *img, double a, double b, double *R, double *G, double 
  // coordinates. Your code should use bi-linear
  // interpolation to obtain the texture colour.
  //////////////////////////////////////////////////
+  int i, j;
+  double up, vp;  
+  double *rgbIm;
 
- *(R)=0;	// Returns black - delete this and
- *(G)=0;	// replace with your code to compute
- *(B)=0;	// texture colour at (a,b)
+  rgbIm=(double *)img->rgbdata;
+
+  i = floor(img->sx*a);
+  j = floor(img->sy*b);
+
+  up = img->sx*a - i;
+  vp = img->sy*b - j;
+
+  *(R) = (1-up)*(1-vp)*rgbIm[(j*img->sx+i)*3] + up*(1-vp)*rgbIm[((j+1)*img->sx+i)*3] + (1-up)*vp*rgbIm[(j*img->sx+i+1)*3] + up*vp*rgbIm[((j+1)*img->sx+i+1)*3];
+  
+  *(G) = (1-up)*(1-vp)*rgbIm[(j*img->sx+i)*3 + 1] + up*(1-vp)*rgbIm[((j+1)*img->sx+i)*3 +1] + (1-up)*vp*rgbIm[(j*img->sx+i+1)*3 + 1] + up*vp*rgbIm[((j+1)*img->sx+i+1)*3 +1];
+  
+  *(B) = (1-up)*(1-vp)*rgbIm[(j*img->sx+i)*3 + 2] + up*(1-vp)*rgbIm[((j+1)*img->sx+i)*3 + 2] +  (1-up)*vp*rgbIm[(j*img->sx+i+1)*3 + 2] + up*vp*rgbIm[((j+1)*img->sx+i+1)*3 + 2];
+
  return;
 }
 
@@ -968,7 +990,7 @@ struct image *readPPMimage(const char *filename)
   fRGB=(double *)calloc(sizx*sizy*3,sizeof(double));
   if (tmp==NULL||fRGB==NULL)
   {
-   fprintf(stderr,"Out of memory allocating space for image\n");
+   fprintf(stderr,"Out of memory allocating space for teximage\n");
    free(im);
    fclose(f);
    return(NULL);
