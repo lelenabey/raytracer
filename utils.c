@@ -185,7 +185,7 @@ struct object3D *newSphere(double ra, double rd, double rs, double rg, double r,
 
 struct object3D *newCylinder(double ra, double rd, double rs, double rg, double r, double g, double b, double alpha, double r_index, double shiny)
 {
- // Intialize a new sphere with the specified parameters:
+ // Intialize a new cylinder with the specified parameters:
  // ra, rd, rs, rg - Albedos for the components of the Phong model
  // r, g, b, - Colour for this plane
  // alpha - Transparency, must be set to 1 unless you are doing refraction
@@ -378,14 +378,7 @@ void cylinderIntersect(struct object3D *cylinder, struct ray3D *ray, double *lam
  z1 = p0_z +(t1*d_z);
  z2 = p0_z +(t2*d_z);
  t =-1;
-/*
- if(1 < t2 && t1 > 0){
-   t = t1;
- }
- else{
-   t = t2;
- }
-*/
+
  if(z1 <= 1 && z1 >= 0){
   t = z1;	
  }
@@ -399,12 +392,7 @@ void cylinderIntersect(struct object3D *cylinder, struct ray3D *ray, double *lam
   free(origin);
   return;
  }
- /*if((z1 <= 0 && z2 >=0 && z2 <= 1) || (z2 <= 0 && z1 >=0 && z2 <=1)){
-  t = (-p0_z)/d_z;
- }
- if((z1 >= 0 && z1 <= 1 && z2 >= 1) || (z2 >= 0 && z2 <= 1 && z1 >= 1)){
-  t = (1-p0_z)/d_z;
- }*/
+
  rayPosition(origin, t, p);
 
  tn = newPoint(-p->px, -p->py, -p->pz);
