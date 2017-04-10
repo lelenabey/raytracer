@@ -80,6 +80,7 @@ void buildScene(void)
  invert(&o->T[0][0],&o->Tinv[0][0]);		// Very important! compute
 						// and store the inverse
 						// transform for this object!
+ loadTexture(o, "./3.ppm");
  insertObject(o,&object_list);			// Insert into object list
 
  
@@ -91,20 +92,20 @@ void buildScene(void)
  Translate(o,-1.45,1.1,3.5);
  invert(&o->T[0][0],&o->Tinv[0][0]);
  insertObject(o,&object_list);
-/*
+
  o=newSphere(.05,.95,.95,.75,.75,.95,.55,1,1,6);
  Scale(o,.5,2.0,1.0);
  RotateZ(o,PI/1.5);
  Translate(o,1.75,1.25,5.0);
  invert(&o->T[0][0],&o->Tinv[0][0]);
  insertObject(o,&object_list);
-*/
- o=newCylinder(.05,.95,.95,.75,.75,.95,.55,1,1,6);
- Scale(o,.75,.75,4);
- //RotateX(o,PI/2);
- Translate(o,3,3,15);
- invert(&o->T[0][0],&o->Tinv[0][0]);
- insertObject(o,&object_list);
+
+ // o=newCylinder(.05,.95,.95,.75,.75,.95,.55,1,1,6);
+ // Scale(o,.75,.75,4);
+ // //RotateX(o,PI/2);
+ // Translate(o,3,3,15);
+ // invert(&o->T[0][0],&o->Tinv[0][0]);
+ // insertObject(o,&object_list);
 
  // Insert a single point light source.
  // p.px=0;
@@ -254,9 +255,9 @@ void rtShade(struct object3D *obj, struct point3D *p, struct point3D *n, struct 
 	 light = light->next;
 	}
 
-	 col->R = tmp_col.R;
-	 col->G = tmp_col.G;
-	 col->B = tmp_col.B;
+	 // col->R = tmp_col.R;
+	 // col->G = tmp_col.G;
+	 // col->B = tmp_col.B;
 
 	//printf("Depth : %i\n", depth);
 
@@ -279,9 +280,9 @@ void rtShade(struct object3D *obj, struct point3D *p, struct point3D *n, struct 
 
 	 }
 
-	 col->R = max(0, -1*max(-255, -col->R));
-	 col->G = max(0, -1*max(-255, -col->G));
-	 col->B = max(0, -1*max(-255, -col->B));
+	 col->R += max(0, -1*max(-255, -tmp_col.R));
+	 col->G += max(0, -1*max(-255, -tmp_col.G));
+	 col->B += max(0, -1*max(-255, -tmp_col.B));
 
      
  //fprintf(stderr,"r g b:  %f  %f\n",obj->col.R,obj->col.G);
