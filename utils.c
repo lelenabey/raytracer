@@ -350,7 +350,7 @@ void cylinderIntersect(struct object3D *cylinder, struct ray3D *ray, double *lam
  rayTransform(ray, origin, cylinder);
  *lambda = -1;
 
- double t, t1, t2, A, B, C, z1, z2;
+ double t, t1, t2, A, B, C, z1, z2, z3;
  double p0_z = origin->p0.pz;
  double d_z = origin->d.pz;
  origin->p0.pz = 0;
@@ -370,7 +370,7 @@ void cylinderIntersect(struct object3D *cylinder, struct ray3D *ray, double *lam
 
  z1 = p0_z +(t1*d_z);
  z2 = p0_z +(t2*d_z);
- t = -1;
+ t =-1;
 /*
  if(1 < t2 && t1 > 0){
    t = t1;
@@ -379,20 +379,25 @@ void cylinderIntersect(struct object3D *cylinder, struct ray3D *ray, double *lam
    t = t2;
  }
 */
-
  if(z1 <= 1 && z1 >= 0){
   t = z1;	
  }
  if(z2 <= 1 && z2 >= 0 && z2 > t){
   t = z2;
- } 
+ }  
+
  if (t <= 0){
   free(new_ray_d);
   free(new_ray_p);
   free(origin);
   return;
  }
-  
+ /*if((z1 <= 0 && z2 >=0 && z2 <= 1) || (z2 <= 0 && z1 >=0 && z2 <=1)){
+  t = (-p0_z)/d_z;
+ }
+ if((z1 >= 0 && z1 <= 1 && z2 >= 1) || (z2 >= 0 && z2 <= 1 && z1 >= 1)){
+  t = (1-p0_z)/d_z;
+ }*/
  rayPosition(origin, t, p);
 
  tn = newPoint(-p->px, -p->py, -p->pz);

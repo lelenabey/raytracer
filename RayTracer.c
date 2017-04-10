@@ -84,36 +84,67 @@ void buildScene(void)
 
  
  // Let's add a couple spheres
-
+ //A3 
  o=newSphere(.05,.95,.35,.35,1,.25,.25,1,1,6);
- Scale(o,.75,.5,1.5);
+ Scale(o,.75,.5,1.5); 
  RotateY(o,PI/2);
  Translate(o,-1.45,1.1,3.5);
  invert(&o->T[0][0],&o->Tinv[0][0]);
  insertObject(o,&object_list);
-/*
+
  o=newSphere(.05,.95,.95,.75,.75,.95,.55,1,1,6);
  Scale(o,.5,2.0,1.0);
  RotateZ(o,PI/1.5);
  Translate(o,1.75,1.25,5.0);
  invert(&o->T[0][0],&o->Tinv[0][0]);
  insertObject(o,&object_list);
-*/
- o=newCylinder(.05,.95,.95,.75,.75,.95,.55,1,1,6);
- Scale(o,.75,.75,4);
- //RotateX(o,PI/2);
- Translate(o,3,3,15);
+ 
+
+ //A4
+ /*
+ o=newPlane(.05,.75,.05,.05,0,0,0,1,1,2);
+ Scale(o,6,6,1);                                // Do a few transforms...
+ RotateY(o,-PI/1.20);
+ //RotateX(o,PI/2.25);
+ Translate(o,0,-3,10);
+ invert(&o->T[0][0],&o->Tinv[0][0]);            // Very important! compute
+                                                // and store the inverse
+                                                // transform for this object!
+ insertObject(o,&object_list); 
+
+ o=newSphere(.05,.95,.35,.35,1,.25,.25,1,1,6); 
+ Scale(o,.75,.75,1.5); 
+ Translate(o,-6,-1,0);
+ RotateY(o,PI/2);
  invert(&o->T[0][0],&o->Tinv[0][0]);
  insertObject(o,&object_list);
 
+ o=newCylinder(.05,.95,.95,.75,.75,.95,.55,1,1,6);
+ Scale(o,.75,.75,4);
+ Translate(o,-2.5,-2.5,-1);
+ RotateX(o,-PI/2);
+ invert(&o->T[0][0],&o->Tinv[0][0]);
+ insertObject(o,&object_list);
+*/
+
+/*
+ o=newCylinder(.05,.95,.95,.75,.75,.95,.55,1,1,6);
+ Scale(o,.75,.75,4);
+ Translate(o,3,-2,-7);
+ RotateX(o,-PI/2);
+ invert(&o->T[0][0],&o->Tinv[0][0]);
+ insertObject(o,&object_list);
+*/
+ 
  // Insert a single point light source.
- // p.px=0;
- // p.py=15.5;
- // p.pz=-5.5;
- // p.pw=1;
- // l=newPLS(&p,.95,.95,.95);
- // insertPLS(l,&light_list);
- addAreaLight(3, 3, 0, 0, 5.5,\
+ /* p.px=0;
+  p.py=15.5;
+  p.pz=-5.5;
+  p.pw=1;
+  l=newPLS(&p,255,255,255);
+  insertPLS(l,&light_list);*/
+  // Insert multiple light sources 
+  addAreaLight(3, 3, 0, 0, 5.5,\
                   0, 15.5, -5.5, 3, 3,\
                   255, 255, 255, &object_list, &light_list);
 
@@ -194,13 +225,10 @@ void rtShade(struct object3D *obj, struct point3D *p, struct point3D *n, struct 
 	 struct point3D tp;
 	 struct point3D tn;
 	 double ta = 0;
-	 //printf("returned: %f, %f, %f\n", light->p0.px, light->p0.py, light->p0.pz);
-	 //printf("returned: %f, %f, %f\n", light_dir->px, light_dir->py, light_dir->pz);
 
 	 findFirstHit(shadow_ray, &tlambda, obj, &light_obj, &tp, &tn, &ta, &b);
 	 free(shadow_dir);
 	 free(shadow_ray);
-	 //printf("returned: %f, %f, %f, %f\n", p->px, p->py, p->pz, tlambda);
 	 if(tlambda > 0 && tlambda < 1){
 	 
 	 	tmp_col.R = 0;
@@ -221,7 +249,6 @@ void rtShade(struct object3D *obj, struct point3D *p, struct point3D *n, struct 
 	 N->pw = 0;
 	 V->pw= 0;
 	 normalize(L);
-	 //normalize(N);
 	 normalize(V);
 
 	 LN = dot(L, N);
@@ -232,9 +259,7 @@ void rtShade(struct object3D *obj, struct point3D *p, struct point3D *n, struct 
 	 normalize(r);
 
 	 NL = max(0, dot(N, L));
-	 //printf("NL : %f\n", L->py);
 	 VR = max(0, pow(dot(V, r), obj->shinyness));
-	 //printf("VR %f\n", dot(V, r));
 	 free(L);
 	 free(N);
 	 free(V);
@@ -242,14 +267,12 @@ void rtShade(struct object3D *obj, struct point3D *p, struct point3D *n, struct 
 
 	 double amb = obj->alb.ra;
 	 double diff = obj->alb.rd * NL;
-	 double spec = obj->alb.rs * VR;
+	 double spec = 0*obj->alb.rs * VR;
 	 
 	 //Only multiply obj color by amb and diff, raytrace tut part2 slide 5.
 	 tmp_col.R += (R*(amb + diff) + spec)*light->col.R;
 	 tmp_col.G += (G*(amb + diff) + spec)*light->col.G;
 	 tmp_col.B += (B*(amb + diff) + spec)*light->col.B;
-
-	 // make sure that the colors are bound by [0, 255]
 
 	 light = light->next;
 	}
@@ -258,9 +281,6 @@ void rtShade(struct object3D *obj, struct point3D *p, struct point3D *n, struct 
 	 col->G = tmp_col.G;
 	 col->B = tmp_col.B;
 
-	//printf("Depth : %i\n", depth);
-
-
 	 if (depth < MAX_DEPTH){
 	 	struct point3D *reflect_p = p;
 
@@ -268,26 +288,18 @@ void rtShade(struct object3D *obj, struct point3D *p, struct point3D *n, struct 
 
 	 	struct point3D *reflect_d = newPoint(ray->d.px - 2*dn*n->px, ray->d.py - 2*dn*n->py, ray->d.pz - 2*dn*n->pz);
 	 	reflect_d->pw = 0;
-	    //printf("returned: %f, %f, %f, %f\n", reflect_d->px, reflect_d->py, reflect_d->pz, reflect_d->pw);
-	    //normalize(reflect_d);
 	 	struct ray3D * reflected = newRay(reflect_p, reflect_d);
 	 	rayTrace(reflected, depth+1, col, obj);
 
-	    //free(reflect_p);
 	 	free(reflect_d);
 	 	free(reflected);
 
-	 }
-
+ 	 }
+         // make sure that the colors are bound by [0, 255]
 	 col->R = max(0, -1*max(-255, -col->R));
 	 col->G = max(0, -1*max(-255, -col->G));
 	 col->B = max(0, -1*max(-255, -col->B));
-
-     
- //fprintf(stderr,"r g b:  %f  %f\n",obj->col.R,obj->col.G);
-
- // Be sure to update 'col' with the final colour computed here!
-	return;
+	 return;
 
 }
 
@@ -312,8 +324,6 @@ void findFirstHit(struct ray3D *ray, double *lambda, struct object3D *Os, struct
 	double tlambda = -1; // temp variables
 	struct point3D tp;
 	struct point3D tn;
-        //n = newPoint(1,0,0);
-        //p = newPoint(0,0,0);
 	if(object_list == NULL){
 		return;
 	}
@@ -321,18 +331,12 @@ void findFirstHit(struct ray3D *ray, double *lambda, struct object3D *Os, struct
 	while(walker != NULL){
 		if(walker != Os){
 			walker->intersect(walker, ray, &tlambda, &tp, &tn, a, b);
- 		// 	if(*a == 3 && tlambda >= 0){
-			// 	printf("returned: %f\n", tlambda);
-			// } 
 			if(tlambda >= 0 && (*lambda == -1 || tlambda < *lambda)){
 				intersect_count += 1;
 				*obj = walker;
 				*lambda = tlambda;
 				*p = tp;
 				*n = tn;
-				//printf("returned: %f, %f, %f, %f\n", tn.px, tn.py, tn.pz, tlambda);
-				//n = newPoint(tn.px, tn.py, tn.pz);
-                       		//printf("returned: %f, %f, %f, %f\n", p->px, p->py, p->pz, tlambda);
 			}
 		}
 		walker = walker->next;
@@ -527,7 +531,6 @@ int main(int argc, char *argv[])
  struct point3D * imagePlane;
  struct point3D * origin;
  struct point3D * direction;
- //set to 1 if you want no anti-aliasing
  int supersamplingSize = 4;
  if(!antialiasing) supersamplingSize = 1;
  fprintf(stderr,"Rendering row: ");
@@ -536,17 +539,12 @@ int main(int argc, char *argv[])
  	fprintf(stderr,"%d/%d, ",j,sx);
  	for (i=0;i<sx;i++)
  	{
-    ///////////////////////////////////////////////////////////////////
-    // TO DO - complete the code that should be in this loop to do the
-    //         raytracing!
-    ///////////////////////////////////////////////////////////////////
-		origin  = newPoint(0,0,0);//newPoint(cam->e.px,cam->e.py,cam->e.pz);
+    	///////////////////////////////////////////////////////////////////
+   	// TO DO - complete the code that should be in this loop to do the
+    	//         raytracing!
+    	///////////////////////////////////////////////////////////////////
+		origin  = newPoint(0,0,0);
 		imagePlane = newPoint(0,0,0);
- 		/*pc.px = 0;
-		pc.py = 0;
-		pc.pz = 0;
-		pc.pw = 0;
-		*/
 		col.R = 0; col.G = 0; col.B = 0;
 		supersampledColor.R = 0; supersampledColor.G = 0; supersampledColor.B = 0;
 		l=0;k=0;	
@@ -559,32 +557,23 @@ int main(int argc, char *argv[])
 				imagePlane->px = (cam->wl) + (i + dx)*du;
 				imagePlane->py = (cam->wt) + (j + dy)*dv;
 				imagePlane->pz = cam->f;
- 				/*d.px = (cam->wl) + (i + dx)*du;
-                                d.py = (cam->wt) + (j + dy)*dv;
-                                d.pz = cam->f;
-			        d.pw = 0;*/ 
-		                //fprintf(stderr,"(%d, %d): %f/%f, \n",l, k, d.px, d.py);
 		 		//Ray Direction 
 				direction = newPoint(imagePlane->px, imagePlane->py, imagePlane->pz); 	
 				subVectors(origin, direction);
-				//fprintf(stderr,"(%d, %d): %f/%f, \n",1, 1, d.px, d.py);
+				
 				direction->pw = 0;
 			    	//Convert to world-space
 				matVecMult(cam->C2W, direction);
 				matVecMult(cam->C2W, origin);
-				//matVecMult(cam->C2W, &d);
-                                //matVecMult(cam->C2W, &pc);
 				direction->pw = 0;
 				d.pw = 0;
 				ray = newRay(origin, direction);
-				//ray = newRay(&pc, &d);
 				rayTrace(ray, 0, &col, NULL);
 				double colorWeight = 1;
   				if(antialiasing){
 					//weight the color using a gaussian
 					double gaussianScale = 2;
 			   		colorWeight = (1/(0.4*2*PI)) * exp(-1*(pow((l-((supersamplingSize-1)/2)/gaussianScale),2) + pow((k-((supersamplingSize-1)/2)/gaussianScale),2))/(2*0.4));
-					//printf("d: %f, p:%f, result: %f\n",pow(k,2), -1*(pow((k-(supersamplingSize/2)),2))/(2*0.25), colorWeightk);
 				}
 				supersampledColor.R += col.R*colorWeight;
 				supersampledColor.G += col.G*colorWeight;
@@ -596,10 +585,10 @@ int main(int argc, char *argv[])
 		col.R = supersampledColor.R;
 		col.G = supersampledColor.G;
 		col.B = supersampledColor.B;
+		//bound the color from [0,255]
 		col.R = max(0, -1*max(-255, -col.R));
  		col.G = max(0, -1*max(-255, -col.G));
  		col.B = max(0, -1*max(-255, -col.B));
-		//printf("%f, %f, %f\n", col.R, col.G, col.B);
 		 //Paint the RGB
 		*rgbIm  = col.R;
 		rgbIm++;
